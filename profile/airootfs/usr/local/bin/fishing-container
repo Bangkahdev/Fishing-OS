@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Helper cepat untuk Docker
+# Helper untuk mengelola Docker daemon
 
 case "${1:-}" in
     up)
@@ -14,10 +14,10 @@ case "${1:-}" in
         if sudo docker info >/dev/null 2>&1; then
             echo "Docker daemon aktif."
         else
-            echo "Docker daemon tidak aktif. Jalankan: devops-docker up"
+            echo "Docker daemon tidak aktif. Jalankan: fishing-container up"
         fi
         ;;
     *)
-        echo "Penggunaan: devops-docker {up|down|status}"
+        echo "Penggunaan: fishing-container {up|down|status}"
         ;;
 esac

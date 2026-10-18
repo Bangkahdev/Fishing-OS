@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Cek versi alat DevOps yang terpasang
+# Cek versi alat pemrograman yang terpasang
 
-echo "===== Fishing OS DevOps - Alat Tersedia ====="
+echo "===== Fishing OS - Alat Pemrograman Tersedia ====="
 echo
 
 check() {
@@ -16,14 +16,10 @@ check git
 check gh
 check docker
 check docker-compose
-check podman
 check kubectl
 check helm
-check kind
 check terraform
 check ansible
-check packer
-check vault
 check python3
 check node
 check go
@@ -31,9 +27,10 @@ check rustc
 check java
 check make
 check cmake
+check gcc
+check clang
 check jq
-check yq
 check ssh
 
 echo
-echo "Selamat ngoding dan deploy! 🎣"
+echo "Selamat ngoding! 🎣"

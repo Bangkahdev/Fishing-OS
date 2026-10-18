@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # user_scenario.sh - Skrip yang dijalankan di dalam VM (via kernel param script=)
-# untuk mensimulasi penggunaan nyata Fishing OS DevOps oleh seorang pengguna.
+# untuk mensimulasi penggunaan nyata Fishing OS oleh seorang pengguna.
 #
 # Scenario:
 # 1. Login sebagai liveuser (autologin)
-# 2. Cek alat DevOps yang tersedia (devops-check)
+# 2. Cek alat pemrograman yang tersedia (fishing-check)
 # 3. Cek versi Docker, kubectl, terraform, ansible
 # 4. Simulasi menulis file kode sederhana
-# 5. Simulasi inisialisasi proyek DevOps kecil
+# 5. Simulasi inisialisasi proyek kecil
 # 6. Selesai dan shutdown
 
 set -euo pipefail
@@ -28,13 +28,13 @@ LOG="/tmp/user_scenario.log"
     cat /etc/os-release || true
     echo
 
-    # 2. Cek alat DevOps
-    echo "[2/6] Menjalankan devops-check..."
-    devops-check || true
+    # 2. Cek alat pemrograman
+    echo "[2/6] Menjalankan fishing-check..."
+    fishing-check || true
     echo
 
     # 3. Cek versi alat kunci
-    echo "[3/6] Versi alat kunci DevOps..."
+    echo "[3/6] Versi alat kunci..."
     for cmd in docker kubectl terraform ansible python3 node go git; do
         if command -v "$cmd" >/dev/null 2>&1; then
             printf "  %-12s %s\n" "$cmd" "$("$cmd" --version 2>/dev/null | head -n1 || "$cmd" version 2>/dev/null | head -n1)"
@@ -45,9 +45,8 @@ LOG="/tmp/user_scenario.log"
     echo
 
     # 4. Simulasi menulis file kode (contoh Dockerfile sederhana)
-    echo "[4/6] Simulasi membuat file proyek DevOps..."
-    mkdir -p /home/liveuser/demo-devops
-    cat > /home/liveuser/demo-devops/Dockerfile <<'EOF'
+    echo "[4/6] Simulasi membuat file proyek..."
+    cat > /home/liveuser/demo-prog/Dockerfile <<'EOF'
 FROM python:3.12-slim
 WORKDIR /app
 COPY requirements.txt .
@@ -56,12 +55,12 @@ COPY . .
 CMD ["python", "app.py"]
 EOF
 
-    cat > /home/liveuser/demo-devops/requirements.txt <<'EOF'
+    cat > /home/liveuser/demo-prog/requirements.txt <<'EOF'
 flask
 requests
 EOF
 
-    cat > /home/liveuser/demo-devops/app.py <<'EOF'
+    cat > /home/liveuser/demo-prog/app.py <<'EOF'
 from flask import Flask
 app = Flask(__name__)
 
@@ -73,8 +72,8 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
 EOF
 
-    mkdir -p /home/liveuser/demo-devops/.github/workflows
-    cat > /home/liveuser/demo-devops/.github/workflows/ci.yml <<'EOF'
+    mkdir -p /home/liveuser/demo-prog/.github/workflows
+    cat > /home/liveuser/demo-prog/.github/workflows/ci.yml <<'EOF'
 name: CI
 
 on: [push]
@@ -88,12 +87,12 @@ jobs:
         run: docker build -t myapp .
 EOF
 
-    ls -la /home/liveuser/demo-devops/ || true
+    ls -la /home/liveuser/demo-prog/ || true
     echo
 
     # 5. Simulasi inisialisasi git
     echo "[5/6] Simulasi inisialisasi proyek..."
-    cd /home/liveuser/demo-devops || true
+    cd /home/liveuser/demo-prog || true
     git init 2>/dev/null || true
     git add . 2>/dev/null || true
     echo "File siap untuk di-commit dan di-deploy."

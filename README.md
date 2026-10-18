@@ -42,14 +42,14 @@ Dibangun menggunakan [archiso](https://wiki.archlinux.org/title/Archiso) dengan 
 Setelah boot ke live ISO (autologin sebagai `liveuser`):
 
 ```bash
-# Cek versi semua alat
-devops-check
+# Cek versi semua alat pemrograman
+fishing-check
 
 # Jalankan Docker daemon
-sudo devops-docker up
+sudo fishing-container up
 
-# Setup awal (user devops, layanan, sudo)
-sudo devops-setup
+# Setup awal (user dev, layanan, sudo)
+sudo fishing-setup
 ```
 
 Boot didukung baik mode BIOS (syslinux) maupun UEFI (systemd-boot).
