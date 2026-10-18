@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Setup awal Fishing OS (jalankan sebagai root)
+
+echo "== Setup awal Fishing OS =="
+
+# Enable layanan dasar
+systemctl enable NetworkManager 2>/dev/null || true
+systemctl enable sshd 2>/dev/null || true
+
+# Buat user dev jika belum ada
+if ! id dev >/dev/null 2>&1; then
+    useradd -m -G wheel,docker -s /bin/zsh dev
+    echo "User 'dev' dibuat."
+else
+    echo "User 'dev' sudah ada."
+fi
+
+# Izinkan wheel pakai sudo tanpa password (opsional, untuk live ISO)
+if [[ ! -f /etc/sudoers.d/dev ]]; then
+    echo "%wheel ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/dev
+    chmod 440 /etc/sudoers.d/dev
+fi
+
+echo "Selesai. Anda dapat login sebagai 'dev' atau gunakan root langsung."

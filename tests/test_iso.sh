@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# test_iso.sh - Boot Fishing OS DevOps ISO in QEMU and simulate real user usage.
+# test_iso.sh - Boot Fishing OS ISO in QEMU and simulate real user usage.
 #
 # Usage: ./test_iso.sh <path-to-iso> [path-to-floppy.img]
 #
 # Skrip ini mem-boot ISO melalui QEMU, menyisipkan skrip scenario melalui
 # floppy disk, dan menjalankan simulasi pengguna seolah-olah orang nyata
-# menggunakan OS ini untuk keperluan DevOps.
+# menggunakan Fishing OS untuk keperluan pemrograman.
 
 set -euo pipefail
 
@@ -69,10 +69,10 @@ else
     echo "[FAIL] Branding Fishing OS tidak ditemukan" | tee -a "$LOG"
 fi
 
-if grep -qi "devops-check" "$LOG"; then
-    echo "[PASS] Perintah devops-check terdeteksi" | tee -a "$LOG"
+if grep -qi "fishing-check" "$LOG"; then
+    echo "[PASS] Perintah fishing-check terdeteksi" | tee -a "$LOG"
 else
-    echo "[WARN] Perintah devops-check tidak ditemukan dalam output" | tee -a "$LOG"
+    echo "[WARN] Perintah fishing-check tidak ditemukan dalam output" | tee -a "$LOG"
 fi
 
 if grep -qi "docker\|kubectl\|terraform\|ansible" "$LOG"; then

@@ -22,7 +22,7 @@ file_permissions=(
   ["/usr/local/bin/choose-mirror"]="0:0:755"
   ["/usr/local/bin/Installation_guide"]="0:0:755"
   ["/usr/local/bin/livecd-sound"]="0:0:755"
-  ["/usr/local/bin/devops-check"]="0:0:755"
-  ["/usr/local/bin/devops-docker"]="0:0:755"
-  ["/usr/local/bin/devops-setup"]="0:0:755"
+  ["/usr/local/bin/fishing-check"]="0:0:755"
+  ["/usr/local/bin/fishing-container"]="0:0:755"
+  ["/usr/local/bin/fishing-setup"]="0:0:755"
 )
