@@ -1,0 +1,114 @@
+# Base system
+base
+base-devel
+linux
+linux-firmware
+mkinitcpio
+mkinitcpio-archiso
+arch-install-scripts
+
+# Bootloader & system
+grub
+syslinux
+efibootmgr
+systemd
+systemd-resolvconf
+networkmanager
+dhcpcd
+iwd
+wpa_supplicant
+openssh
+sudo
+polkit
+dbus
+reflector
+
+# Shell & terminal
+zsh
+fish
+bash
+tmux
+vim
+neovim
+nano
+terminus-font
+
+# Version control
+git
+github-cli
+
+# Containers & orchestration (intihanya, ukuran besar)
+docker
+docker-compose
+kubectl
+helm
+
+# IaC & configuration management
+terraform
+ansible
+
+# Languages & runtimes (intihanya)
+python
+python-pip
+nodejs
+npm
+go
+
+# Build tools
+make
+cmake
+gcc
+clang
+gdb
+
+# Networking & debugging utilities
+curl
+wget
+jq
+inetutils
+bind
+net-tools
+iproute2
+tcpdump
+nmap
+socat
+mtr
+traceroute
+
+# Productivity & dev helpers
+shellcheck
+bat
+fd
+ripgrep
+fzf
+htop
+
+# Firmware & microcode
+amd-ucode
+intel-ucode
+linux-firmware-marvell
+sof-firmware
+wireless-regdb
+wireless_tools
+
+# Misc utils
+rsync
+pv
+less
+man-db
+man-pages
+diffutils
+which
+file
+tar
+zip
+unzip
+gzip
+bzip2
+xz
+zstd
+edk2-shell
+efivar
+dmidecode
+usbutils
+pciutils

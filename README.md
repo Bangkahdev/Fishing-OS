@@ -1,20 +1,93 @@
-# 🎣 Fishing OS
+# Fishing OS
 
-> *Sebuah proyek sistem operasi kustom untuk keperluan pembelajaran dan eksplorasi.*
+> Sebuah proyek sistem operasi berbasis Arch Linux (live ISO, archiso) untuk pengembangan dan eksplorasi.
 
 ---
 
-⚠️ **Proyek ini masih dalam tahap pengembangan aktif.**  
+Proyek ini masih dalam tahap pengembangan aktif.
 Kami terbuka terhadap masukan, kritik, maupun saran demi perbaikan yang lebih baik ke depannya.
 
-Jika Anda memiliki masukan, silakan hubungi saya melalui [GitHub Issues](https://github.com/Bangkah/fishing-os/issues) atau platform lain yang tersedia.
+Jika Anda memiliki masukan, silakan hubungi saya melalui [GitHub Issues](https://github.com/Bangkah/Fishing-OS/issues) atau platform lain yang tersedia.
 
 ---
 
-## ✨ Tentang Fishing OS
-Fishing OS adalah proyek sistem operasi berbasis Linux yang dikembangkan untuk tujuan:
-- Eksperimen personal
+## Tentang Fishing OS
+
+Fishing OS adalah proyek sistem operasi berbasis Arch Linux yang dikembangkan untuk tujuan:
 - Pembelajaran sistem operasi
-- Otomatisasi tool yang sering digunakan dalam dunia rekayasa keamanan
+- Eksperimen personal
+- Platform siap pakai untuk pengembang, termasuk kebutuhan DevOps dan infrastruktur as code
+
+Dibangun menggunakan [archiso](https://wiki.archlinux.org/title/Archiso) dengan profil `releng` sebagai basis.
 
 ---
+
+## Alat Siap Pakai
+
+| Kategori | Alat |
+|---|---|
+| Version control | git, gh |
+| Kontainer | docker, docker-compose |
+| Orkestrasi | kubectl, helm |
+| IaC & Config Mgmt | terraform, ansible |
+| Bahasa | python3, nodejs, go |
+| Build | make, cmake, gcc, clang, gdb |
+| Jaringan & Debug | curl, jq, tcpdump, nmap, ssh, mtr |
+| Shell & Terminal | zsh, fish, vim, neovim, tmux, fzf, bat, ripgrep |
+
+---
+
+## Memulai
+
+Setelah boot ke live ISO (autologin sebagai `liveuser`):
+
+```bash
+# Cek versi semua alat
+devops-check
+
+# Jalankan Docker daemon
+sudo devops-docker up
+
+# Setup awal (user devops, layanan, sudo)
+sudo devops-setup
+```
+
+Boot didukung baik mode BIOS (syslinux) maupun UEFI (systemd-boot).
+
+---
+
+## Membangun ISO
+
+Pastikan Anda sedang menjalankan Arch Linux dan telah memasang paket `archiso`:
+
+```bash
+sudo pacman -S archiso
+mkarchiso -v -w work -o out profile
+```
+
+Hasilnya berupa berkas ISO di `out/` siap dibakar ke USB atau dijalankan dalam mesin virtual.
+
+---
+
+## Rilis & Verifikasi (SRS)
+
+Build rilis dilakukan di CI (GitHub Actions) dan ditandatangani dengan GPG CI key. Artefak rilis mencakup:
+
+- `*.iso` — image live
+- `*.iso.sig` — tanda tangan terpasang ISO
+- `sha256sums.txt` — checksum
+- `sha256sums.txt.sig` — tanda tangan checksum
+- `ci-key-fingerprint.txt` — fingerprint kunci CI
+
+Verifikasi oleh pengguna:
+
+```bash
+gpg --locate-keys rilis@fishing-os.tech
+gpg --verify nama.iso.sig nama.iso
+```
+
+Fingerprint dipublikasikan melalui WKD (`openpgpkey.fishing-os.tech`) dan halaman `/verifikasi` di situs resmi.
+
+---
+
+Lisensi: Lihat berkas `LICENSE` (jika tersedia).
