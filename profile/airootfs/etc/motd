@@ -1,0 +1,13 @@
+Selamat datang di Fishing OS DevOps - Live/Rescue DVD untuk pengembang DevOps.
+
+Alat siap pakai: git, docker, podman, kubectl, helm, terraform, ansible, packer,
+python3, nodejs, go, rust, java, vim, neovim, tmux, ssh, curl, jq, yq, make, gcc.
+
+Mulai dengan mengetik perintah sesuai kebutuhan, misal:
+  docker --version
+  kubectl version --client
+  terraform --version
+  ansible --version
+
+Jaringan Ethernet, WLAN dan WWAN via DHCP bekerja otomatis.
+Untuk Wi-Fi gunakan [35miwctl[0m.

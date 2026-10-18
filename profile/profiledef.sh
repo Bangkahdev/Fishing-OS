@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
-iso_name="archlinux"
-iso_label="FISHING_OS_2026"
+iso_name="fishing-os"
+iso_label="FISHINGOS_$(date +%Y%m)"
 iso_publisher="Muhammad Dhiyaul Atha"
-iso_application="Arch Linux Live/Rescue DVD"
+iso_application="Fishing OS DevOps Live/Rescue DVD"
 iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
 install_dir="arch"
 buildmodes=('iso')
@@ -22,4 +22,7 @@ file_permissions=(
   ["/usr/local/bin/choose-mirror"]="0:0:755"
   ["/usr/local/bin/Installation_guide"]="0:0:755"
   ["/usr/local/bin/livecd-sound"]="0:0:755"
+  ["/usr/local/bin/devops-check"]="0:0:755"
+  ["/usr/local/bin/devops-docker"]="0:0:755"
+  ["/usr/local/bin/devops-setup"]="0:0:755"
 )

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Helper cepat untuk Docker
+
+case "${1:-}" in
+    up)
+        sudo dockerd &
+        echo "Docker daemon dijalankan di latar belakang."
+        ;;
+    down)
+        sudo pkill dockerd
+        echo "Docker daemon dihentikan."
+        ;;
+    status)
+        if sudo docker info >/dev/null 2>&1; then
+            echo "Docker daemon aktif."
+        else
+            echo "Docker daemon tidak aktif. Jalankan: devops-docker up"
+        fi
+        ;;
+    *)
+        echo "Penggunaan: devops-docker {up|down|status}"
+        ;;
+esac

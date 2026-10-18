@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Cek versi alat DevOps yang terpasang
+
+echo "===== Fishing OS DevOps - Alat Tersedia ====="
+echo
+
+check() {
+    if command -v "$1" >/dev/null 2>&1; then
+        printf "%-18s %s\n" "$1" "$("$1" --version 2>/dev/null | head -n1 || "$1" version 2>/dev/null | head -n1)"
+    else
+        printf "%-18s %s\n" "$1" "(belum terpasang)"
+    fi
+}
+
+check git
+check gh
+check docker
+check docker-compose
+check podman
+check kubectl
+check helm
+check kind
+check terraform
+check ansible
+check packer
+check vault
+check python3
+check node
+check go
+check rustc
+check java
+check make
+check cmake
+check jq
+check yq
+check ssh
+
+echo
+echo "Selamat ngoding dan deploy! 🎣"

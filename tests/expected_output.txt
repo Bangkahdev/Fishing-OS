@@ -1,0 +1,24 @@
+# Harapan output dari tes user_scenario.sh
+# Digunakan untuk verifikasi otomatis dalam CI (opsional)
+
+EXPECTED=(
+    "Fishing OS DevOps"
+    "devops-check"
+    "docker"
+    "kubectl"
+    "terraform"
+    "ansible"
+    "python3"
+    "node"
+    "go"
+    "git"
+    "Dockerfile"
+    "app.py"
+    "requirements.txt"
+    "Akhir scenario"
+)
+
+echo "Daftar yang diharapkan dalam output tes:"
+for item in "${EXPECTED[@]}"; do
+    echo "  - $item"
+done
