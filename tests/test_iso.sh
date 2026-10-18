@@ -17,7 +17,7 @@ QEMU_TIMEOUT="300"  # detik
 VM_MEMORY="2G"
 VM_CPUS="2"
 
-echo "=== Fishing OS DevOps CI Test ===" | tee "$LOG"
+echo "=== Fishing OS CI Test ===" | tee "$LOG"
 echo "ISO: $ISO" | tee -a "$LOG"
 echo "Floppy: ${FLOPPY:-none}" | tee -a "$LOG"
 echo "Tanggal: $(date)" | tee -a "$LOG"
@@ -63,10 +63,10 @@ echo | tee -a "$LOG"
 echo "=== Hasil Tes QEMU ===" | tee -a "$LOG"
 
 # Verifikasi output penting
-if grep -qi "Fishing OS DevOps\|Fishing OS" "$LOG"; then
-    echo "[PASS] Terdeteksi branding Fishing OS DevOps di output" | tee -a "$LOG"
+if grep -qi "Fishing OS" "$LOG"; then
+    echo "[PASS] Terdeteksi branding Fishing OS di output" | tee -a "$LOG"
 else
-    echo "[FAIL] Branding Fishing OS DevOps tidak ditemukan" | tee -a "$LOG"
+    echo "[FAIL] Branding Fishing OS tidak ditemukan" | tee -a "$LOG"
 fi
 
 if grep -qi "devops-check" "$LOG"; then

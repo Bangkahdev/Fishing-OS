@@ -16,7 +16,7 @@ LOG="/tmp/user_scenario.log"
 
 {
     echo "========================================"
-    echo "  Fishing OS DevOps - User Scenario"
+    echo "  Fishing OS - User Scenario"
     echo "  Simulasi pengguna nyata"
     echo "  Waktu: $(date)"
     echo "========================================"
@@ -67,7 +67,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
-    return "Hello from Fishing OS DevOps!"
+    return "Hello from Fishing OS!"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

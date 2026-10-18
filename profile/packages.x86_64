@@ -71,7 +71,6 @@ net-tools
 iproute2
 tcpdump
 nmap
-ncat
 socat
 mtr
 traceroute
@@ -83,7 +82,6 @@ fd
 ripgrep
 fzf
 htop
-neofetch
 
 # Firmware & microcode
 amd-ucode

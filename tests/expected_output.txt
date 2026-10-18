@@ -2,7 +2,7 @@
 # Digunakan untuk verifikasi otomatis dalam CI (opsional)
 
 EXPECTED=(
-    "Fishing OS DevOps"
+    "Fishing OS"
     "devops-check"
     "docker"
     "kubectl"

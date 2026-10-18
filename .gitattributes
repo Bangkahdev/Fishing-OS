@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+*.sh text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+*.md text eol=lf
+profiledef.sh text eol=lf
+packages.x86_64 text eol=lf
+pacman.conf text eol=lf
