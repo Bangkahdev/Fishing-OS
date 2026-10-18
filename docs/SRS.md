@@ -9,12 +9,12 @@
 | **Status** | Final — disetujui untuk implementasi |
 | **Tanggal** | 2026-10-19 |
 | **Changelog 1.1** | Nama distro: Fishing OS; domain ditandai sebagai keputusan pending |
-| **Changelog 1.2** | Domain dikunci: `fishing-os.tech` (D-5 final), semua placeholder terisi |
+| **Changelog 1.2** | Domain dikunci: `mdhiyaulatha.me` (D-5 final), semua placeholder terisi |
 | **Changelog 1.3** | Seksi 6 disederhanakan untuk proyek satu orang — tetap ada sebagai jejak audit |
 | **Basis** | archiso (profil `releng`), target x86_64 |
 
 - Distro: **Fishing OS** (`iso_name=fishing-os`)
-- Domain: **`fishing-os.tech`** (WKD aktif di `openpgpkey.fishing-os.tech`)
+- Domain: **`mdhiyaulatha.me`** (WKD aktif di `openpgpkey.mdhiyaulatha.me`)
 
 ---
 
@@ -34,7 +34,7 @@ Tidak termasuk: installer ke disk (out of scope fase 1), repositori paket kustom
 - **ISO** — berkas image live yang dihasilkan `mkarchiso`.
 - **CI key** — kunci GPG khusus penandatanganan rilis otomatis, hanya ada di GitHub Secrets.
 - **Cold key** — kunci GPG rilis manager, disimpan offline.
-- **WKD** — Web Key Directory, metode publikasi kunci OpenPGP via HTTPS (`openpgpkey.fishing-os.tech`).
+- **WKD** — Web Key Directory, metode publikasi kunci OpenPGP via HTTPS (`openpgpkey.mdhiyaulatha.me`).
 
 ---
 
@@ -104,14 +104,14 @@ Private key **tidak pernah** disimpan di repositori git dalam bentuk apa pun. Ku
 
 ### 3. Kanal Publikasi Fingerprint (dua kanal independen)
 
-- **WKD**: `openpgpkey.fishing-os.tech` — memungkinkan `gpg --locate-keys rilis@fishing-os.tech`.
+- **WKD**: `openpgpkey.mdhiyaulatha.me` — memungkinkan `gpg --locate-keys bangkah@mdhiyaulatha.me`.
 - **Situs resmi**: halaman `/verifikasi` berisi fingerprint dan prosedur verifikasi.
 
 ### 4. Verifikasi oleh Pengguna
 
 ```bash
-gpg --locate-keys rilis@fishing-os.tech
-gpg --fingerprint rilis@fishing-os.tech   # cocokkan dengan situs resmi
+gpg --locate-keys bangkah@mdhiyaulatha.me
+gpg --fingerprint bangkah@mdhiyaulatha.me   # cocokkan dengan situs resmi
 gpg --verify nama.iso.sig nama.iso # harus: Good signature
 ```
 
@@ -158,7 +158,7 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 | D-2 | Kanal fingerprint | WKD + halaman `/verifikasi` di situs resmi |
 | D-3 | Basis profil | `releng` (bukan `baseline`) |
 | D-4 | Platform CI | GitHub Actions |
-| D-5 | Domain resmi | `fishing-os.tech` (keputusan: beli domain, WKD aktif) |
+| D-5 | Domain resmi | `mdhiyaulatha.me` (keputusan: gunakan domain portfolio, WKD aktif) |
 
 ---
 

@@ -78,8 +78,8 @@ jobs:
           gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
             --detach-sign sha256sums.txt
           gpg --batch --export-ownertrust > ownertrust.txt
-          gpg --armor --export rilis@fishing-os.tech > ci-key.asc
-          gpg --armor --fingerprint rilis@fishing-os.tech > ci-key-fingerprint.txt
+          gpg --armor --export bangkah@mdhiyaulatha.me > ci-key.asc
+          gpg --armor --fingerprint bangkah@mdhiyaulatha.me > ci-key-fingerprint.txt
           echo "=== Fingerprint ==="
           cat ci-key-fingerprint.txt
           rm -rf "$GNUPGHOME"

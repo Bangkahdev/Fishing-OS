@@ -82,11 +82,11 @@ Build rilis dilakukan di CI (GitHub Actions) dan ditandatangani dengan GPG CI ke
 Verifikasi oleh pengguna:
 
 ```bash
-gpg --locate-keys rilis@fishing-os.tech
+gpg --locate-keys bangkah@mdhiyaulatha.me
 gpg --verify nama.iso.sig nama.iso
 ```
 
-Fingerprint dipublikasikan melalui WKD (`openpgpkey.fishing-os.tech`) dan halaman `/verifikasi` di situs resmi.
+Fingerprint dipublikasikan melalui WKD (`openpgpkey.mdhiyaulatha.me`) dan halaman `/verifikasi` di situs resmi.
 
 ---
 
