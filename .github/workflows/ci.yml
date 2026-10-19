@@ -73,13 +73,14 @@ jobs:
           chmod 700 "$GNUPGHOME"
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
           cd out
+          GPG_USER="bangkah@mdhiyaulatha.me"
           gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
-            --detach-sign fishing-os*.iso
+            --local-user "$GPG_USER" --detach-sign fishing-os*.iso
           gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
-            --detach-sign sha256sums.txt
+            --local-user "$GPG_USER" --detach-sign sha256sums.txt
           gpg --batch --export-ownertrust > ownertrust.txt
-          gpg --armor --export bangkah@mdhiyaulatha.me > ci-key.asc
-          gpg --armor --fingerprint bangkah@mdhiyaulatha.me > ci-key-fingerprint.txt
+          gpg --armor --export "$GPG_USER" > ci-key.asc
+          gpg --armor --fingerprint "$GPG_USER" > ci-key-fingerprint.txt
           echo "=== Fingerprint ==="
           cat ci-key-fingerprint.txt
           rm -rf "$GNUPGHOME"
