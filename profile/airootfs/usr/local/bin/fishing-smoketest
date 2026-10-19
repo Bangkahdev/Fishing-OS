@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Smoke test di dalam ISO. Dijalankan oleh fishing-smoketest.service hanya
+# jika kernel diberi parameter fishing.test=1 (lihat tests/test_iso.sh).
+# Semua keluaran berawalan penanda agar mudah dicari di konsol serial.
+
+P="FISHING-SMOKETEST:"
+fail=0
+
+echo "$P START"
+
+for tool in git docker kubectl helm terraform ansible python3 node go jq ssh make gcc curl tmux nvim vim; do
+    if command -v "$tool" >/dev/null 2>&1; then
+        echo "$P OK $tool"
+    else
+        echo "$P MISSING $tool"
+        fail=$((fail + 1))
+    fi
+done
+
+if grep -q '^NAME="Fishing OS"' /etc/os-release; then
+    echo "$P OK os-release"
+else
+    echo "$P BAD os-release (NAME bukan Fishing OS)"
+    fail=$((fail + 1))
+fi
+
+echo "$P INFO unit gagal: $(systemctl --failed --no-legend 2>/dev/null | wc -l)"
+
+if [[ "$fail" -eq 0 ]]; then
+    echo "$P PASS"
+else
+    echo "$P FAIL ($fail)"
+fi
+echo "$P END"
+
+systemctl poweroff

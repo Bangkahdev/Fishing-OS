@@ -1,0 +1,133 @@
+---
+name: Build (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      retention-days:
+        description: Lama penyimpanan artefak ISO (hari)
+        type: number
+        default: 14
+    outputs:
+      iso-version:
+        description: Versi ISO yang dibangun
+        value: ${{ jobs.build.outputs.iso-version }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      iso-version: ${{ steps.version.outputs.iso-version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm archiso git
+
+      - name: Determine ISO version and SOURCE_DATE_EPOCH
+        id: version
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          SDE="$(git log -1 --format=%ct HEAD)"
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            if [[ "$GITHUB_REF_NAME" =~ ^v([0-9]{4})\.([0-9]{2})\.([0-9]+)$ ]]; then
+              ISO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+            else
+              echo "::error::Tag '$GITHUB_REF_NAME' tidak cocok dengan format vAAAA.BB.N"
+              exit 1
+            fi
+          else
+            ISO_VERSION="$(date -u -d "@$SDE" +%Y.%m.%d)"
+          fi
+          echo "source-date-epoch=$SDE" >> "$GITHUB_OUTPUT"
+          echo "iso-version=$ISO_VERSION" >> "$GITHUB_OUTPUT"
+          echo "SOURCE_DATE_EPOCH=$SDE, ISO_VERSION=$ISO_VERSION"
+
+      - name: Build ISO
+        env:
+          SOURCE_DATE_EPOCH: ${{ steps.version.outputs.source-date-epoch }}
+          FISHING_ISO_VERSION: ${{ steps.version.outputs.iso-version }}
+        run: |
+          mkarchiso -v -w work -o out profile
+          shopt -s nullglob
+          isos=(out/fishing-os-*.iso)
+          if [[ ${#isos[@]} -ne 1 ]]; then
+            echo "::error::Diharapkan tepat 1 ISO, ditemukan ${#isos[@]}"
+            exit 1
+          fi
+          size="$(stat -c%s "${isos[0]}")"
+          max=$((4700 * 1024 * 1024))
+          echo "ISO: ${isos[0]} ($((size / 1024 / 1024)) MiB, batas $((max / 1024 / 1024)) MiB)"
+          if (( size > max )); then
+            echo "::error::Ukuran ISO melebihi batas 4,7 GiB"
+            exit 1
+          fi
+          rm -rf work
+          (cd out && sha256sum -- fishing-os-*.iso > sha256sums.txt && cat sha256sums.txt)
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fishing-os-iso
+          path: |
+            out/*.iso
+            out/sha256sums.txt
+          retention-days: ${{ inputs.retention-days }}
+          compression-level: 0
+          if-no-files-found: error
+
+  smoke-test:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Enable KVM (jika tersedia di runner)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+          ls -l /dev/kvm || echo "KVM tidak tersedia: tes memakai emulasi (lambat)"
+
+      - name: Install QEMU dan xorriso
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qemu-system-x86 xorriso
+
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fishing-os-iso
+          path: out/
+
+      - name: Run smoke test
+        run: bash tests/test_iso.sh out/fishing-os-*.iso
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-logs
+          path: |
+            test-output.log
+            qemu-serial.log
+            qemu-stderr.log
+          retention-days: 7
+          if-no-files-found: ignore

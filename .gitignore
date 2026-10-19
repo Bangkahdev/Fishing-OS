@@ -1,3 +1,8 @@
 work_dir/
 out_dir/
 *.iso
+work/
+out/
+qemu-serial.log
+qemu-stderr.log
+test-output.log

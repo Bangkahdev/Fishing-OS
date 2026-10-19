@@ -6,17 +6,13 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
-    uses: ./.github/workflows/ci.yml
-    secrets: inherit
-    outputs:
-      ISO_PATH: ${{ build.outputs.ISO_PATH }}
-      ISO_SIZE: ${{ build.outputs.ISO_SIZE }}
-      ISO_VERSION: ${{ build.outputs.ISO_VERSION }}
-      BUILD_MODE: ${{ build.outputs.BUILD_MODE }}
+    uses: ./.github/workflows/build.yml
+    with:
+      retention-days: 90
 
   sign:
     needs: build
@@ -24,50 +20,65 @@ jobs:
     container:
       image: archlinux:latest
     environment: release
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download release artifacts
+      - name: Download ISO artifact
         uses: actions/download-artifact@v4
         with:
-          name: fishing-os-release
+          name: fishing-os-iso
           path: out/
 
       - name: Install dependencies
-        run: |
-          pacman -Sy --noconfirm gnupg
+        run: pacman -Syu --noconfirm gnupg
 
       - name: Sign artefacts with CI key
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          EXPECTED_FPR: ${{ vars.GPG_FINGERPRINT }}
         run: |
-          set -e
-          TMPDIR="$(mktemp -d)"
-          export GNUPGHOME="$TMPDIR"
-          chmod 700 "$GNUPGHOME"
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import \
-            --passphrase "$GPG_PASSPHRASE"
-          cd out
+          set -euo pipefail
           GPG_USER="bangkah@mdhiyaulatha.me"
-          gpg --batch --yes --pinentry-mode loopback \
-            --passphrase "$GPG_PASSPHRASE" \
-            --local-user "$GPG_USER" --detach-sign fishing-os*.iso
-          gpg --batch --yes --pinentry-mode loopback \
-            --passphrase "$GPG_PASSPHRASE" \
-            --local-user "$GPG_USER" --detach-sign sha256sums.txt
-          gpg --batch --export-ownertrust > ownertrust.txt
-          gpg --armor --export "$GPG_USER" > ci-key.asc
-          gpg --armor --fingerprint "$GPG_USER" > ci-key-fingerprint.txt
-          echo "=== Fingerprint ==="
-          cat ci-key-fingerprint.txt
-          rm -rf "$GNUPGHOME"
+          GNUPGHOME="$(mktemp -d)"
+          export GNUPGHOME
+          chmod 700 "$GNUPGHOME"
+          trap 'gpgconf --kill gpg-agent || true; rm -rf "$GNUPGHOME"' EXIT
+          PASSFILE="$GNUPGHOME/passphrase"
+          printf '%s' "$GPG_PASSPHRASE" > "$PASSFILE"
+          chmod 600 "$PASSFILE"
 
-      - name: Upload release artifacts
+          printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --pinentry-mode loopback \
+            --passphrase-file "$PASSFILE" --import
+
+          FPR="$(gpg --batch --with-colons --fingerprint "$GPG_USER" | awk -F: '/^fpr:/ {print $10; exit}')"
+          echo "Fingerprint kunci: $FPR"
+          if [[ -n "${EXPECTED_FPR:-}" && "$FPR" != "$EXPECTED_FPR" ]]; then
+            echo "::error::Fingerprint kunci ($FPR) tidak sama dengan vars.GPG_FINGERPRINT"
+            exit 1
+          fi
+
+          cd out
+          shopt -s nullglob
+          isos=(fishing-os-*.iso)
+          if [[ ${#isos[@]} -ne 1 ]]; then
+            echo "::error::Diharapkan tepat 1 ISO, ditemukan ${#isos[@]}"
+            exit 1
+          fi
+          iso="${isos[0]}"
+
+          sha256sum -c sha256sums.txt
+          for f in "$iso" sha256sums.txt; do
+            gpg --batch --yes --pinentry-mode loopback --passphrase-file "$PASSFILE" \
+              --local-user "$GPG_USER" --detach-sign -- "$f"
+            gpg --batch --verify -- "$f.sig" "$f"
+          done
+          gpg --armor --fingerprint "$GPG_USER" > ci-key-fingerprint.txt
+          cat ci-key-fingerprint.txt
+
+      - name: Upload signed artifacts
         uses: actions/upload-artifact@v4
         with:
           name: fishing-os-release-signed
@@ -78,10 +89,14 @@ jobs:
             out/sha256sums.txt.sig
             out/ci-key-fingerprint.txt
           retention-days: 90
+          compression-level: 0
+          if-no-files-found: error
 
   release:
     needs: sign
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Download signed artifacts
