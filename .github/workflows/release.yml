@@ -1,8 +1,9 @@
+---
 name: Release Fishing OS
 
 on:
   push:
-    tags: [ 'v*' ]
+    tags: ['v*']
 
 permissions:
   contents: write
@@ -44,12 +45,15 @@ jobs:
           TMPDIR="$(mktemp -d)"
           export GNUPGHOME="$TMPDIR"
           chmod 700 "$GNUPGHOME"
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import \
+            --passphrase "$GPG_PASSPHRASE"
           cd out
           GPG_USER="bangkah@mdhiyaulatha.me"
-          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$GPG_PASSPHRASE" \
             --local-user "$GPG_USER" --detach-sign fishing-os*.iso
-          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$GPG_PASSPHRASE" \
             --local-user "$GPG_USER" --detach-sign sha256sums.txt
           gpg --batch --export-ownertrust > ownertrust.txt
           gpg --armor --export "$GPG_USER" > ci-key.asc
