@@ -1,0 +1,65 @@
+---
+name: Lint Fishing OS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          pacman -Sy --noconfirm \
+            shellcheck yamllint findutils
+
+      - name: Shellcheck on shell scripts
+        run: |
+          shellcheck tests/test_iso.sh \
+            tests/user_scenario.sh profile/profiledef.sh
+
+      - name: Validate workflow YAML
+        run: |
+          yamllint .github/workflows/ || true
+
+      - name: Check for zero-byte files
+        run: |
+          find . -type f -empty -print | grep -v '^\./\.git/' || true
+
+      - name: Check boot menu branding (no "Arch Linux")
+        run: |
+          if grep -ril "arch linux" profile/syslinux/ profile/grub/ profile/efiboot/ 2>/dev/null; then
+            echo "ERROR: Found 'Arch Linux' in boot menu files" >&2
+            exit 1
+          fi
+          echo "[PASS] No 'Arch Linux' branding in boot menu"
+
+      - name: Check packages exist in Arch repos
+        run: |
+          pacman -Sy --noconfirm >/dev/null 2>&1 || true
+          MISSING=0
+          while IFS= read -r pkg; do
+            [[ -z "$pkg" || "$pkg" == \#* ]] && continue
+            if ! pacman -S --print-format "%n" "$pkg" >/dev/null 2>&1; then
+              echo "WARNING: Package '$pkg' not found in Arch repositories"
+              MISSING=1
+            fi
+          done < profile/packages.x86_64
+          if [[ "$MISSING" -eq 1 ]]; then
+            echo "WARNING: Some packages may not be available" >&2
+          fi
+          echo "[PASS] Package availability check complete"

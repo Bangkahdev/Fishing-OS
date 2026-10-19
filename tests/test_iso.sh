@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_iso.sh - Boot Fishing OS ISO in QEMU and validate ISO contents.
+# test_iso.sh - Boot Fishing OS ISO in QEMU dan validasi konten ISO.
 #
 # Usage: ./test_iso.sh <path-to-iso> [path-to-floppy.img]
 #
@@ -64,10 +64,12 @@ if [[ "$IS_CI" -eq 1 && "$HAS_KVM" -eq 0 ]]; then
 fi
 
 # Siapkan opsi QEMU (hanya jika KVM tersedia atau bukan CI)
+# shellcheck disable=SC2054
 QEMU_ARGS=(
     -machine q35
     -m "$VM_MEMORY"
     -smp "$VM_CPUS"
+    # shellcheck disable=SC2054
     -drive file="$ISO",format=raw,media=cdrom,index=0
     -boot order=d
     -vga std
@@ -84,12 +86,13 @@ else
 fi
 
 if [[ -n "$FLOPPY" && -f "$FLOPPY" ]]; then
+    # shellcheck disable=SC2054
     QEMU_ARGS+=(-drive file="$FLOPPY",format=raw,index=1,media=disk)
 fi
 
 echo "Menjalankan QEMU (timeout ${QEMU_TIMEOUT}s)..." | tee -a "$LOG"
 
-timeout "$QEMU_TIMEOUT" qemu-system-x86_64 "${QEMU_ARGS[@]}" > "$LOG" 2>&1 || true
+timeout "$QEMU_TIMEOUT" qemu-system-x86_64 "${QEMU_ARGS[@]}" > "$LOG" 2>&1
 
 echo | tee -a "$LOG"
 echo "=== Hasil Tes QEMU ===" | tee -a "$LOG"
