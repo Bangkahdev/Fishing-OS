@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Version=1.0
-Name=Install Fishing OS
-Comment=Install the system to your hard drive
-Exec=sudo calamares
-Icon=install
-Terminal=false
-Categories=System;

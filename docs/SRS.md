@@ -67,7 +67,7 @@ Distribusi live USB/Linux yang dapat di-boot langsung, berisi lingkungan desktop
 | FR-ISO-01 | Profil dibangun dari `releng` sebagai basis, disalin ke direktori repo `profile/` | Must | Final |
 | FR-ISO-02 | `profiledef.sh` menetapkan `iso_name=fishing-os`, `iso_label=FISHINGOS_YYYYMM`, `iso_publisher` | Must | Final |
 | FR-ISO-03 | Daftar paket diatur di `packages.x86_64`; tambahan wajib: DE, browser, editor, utilitas sistem | Must | Final |
-| FR-ISO-04 | `airootfs/` berisi konfigurasi: hostname `Fishing OS`, user live default, service yang di-enable | Must | Final |
+| FR-ISO-04 | `airootfs/` berisi konfigurasi: hostname `FishingOS`, user live default, service yang di-enable | Must | Final |
 | FR-ISO-05 | Bootloader menampilkan branding Fishing OS (menu GRUB/syslinux) | Should | Final |
 | FR-ISO-06 | Ukuran ISO hasil build ≤ 4,7 GiB (batas DVD) | Should | Final |
 

@@ -46,6 +46,7 @@ LOG="/tmp/user_scenario.log"
 
     # 4. Simulasi menulis file kode (contoh Dockerfile sederhana)
     echo "[4/6] Simulasi membuat file proyek..."
+    mkdir -p /home/liveuser/demo-prog
     cat > /home/liveuser/demo-prog/Dockerfile <<'EOF'
 FROM python:3.12-slim
 WORKDIR /app
