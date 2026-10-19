@@ -16,6 +16,11 @@ jobs:
     container:
       image: archlinux:latest
       options: --privileged
+    outputs:
+      ISO_PATH: ${{ steps.build.outputs.ISO_PATH }}
+      ISO_SIZE: ${{ steps.build.outputs.ISO_SIZE }}
+      ISO_VERSION: ${{ steps.build.outputs.ISO_VERSION }}
+      BUILD_MODE: ${{ steps.version.outputs.BUILD_MODE }}
 
     steps:
       - name: Checkout repository

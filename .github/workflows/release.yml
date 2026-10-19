@@ -12,6 +12,11 @@ jobs:
   build:
     uses: ./.github/workflows/ci.yml
     secrets: inherit
+    outputs:
+      ISO_PATH: ${{ build.outputs.ISO_PATH }}
+      ISO_SIZE: ${{ build.outputs.ISO_SIZE }}
+      ISO_VERSION: ${{ build.outputs.ISO_VERSION }}
+      BUILD_MODE: ${{ build.outputs.BUILD_MODE }}
 
   sign:
     needs: build

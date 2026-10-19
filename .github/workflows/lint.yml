@@ -30,7 +30,7 @@ jobs:
       - name: Shellcheck on shell scripts
         run: |
           shellcheck tests/test_iso.sh \
-            tests/user_scenario.sh profile/profiledef.sh || true
+            tests/user_scenario.sh profile/profiledef.sh
 
       - name: Validate workflow YAML
         run: |
