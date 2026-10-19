@@ -33,6 +33,14 @@ neovim
 nano
 terminus-font
 
+# Desktop & X11 (DE, browser, editor per SRS FR-ISO-03)
+xfce4
+firefox
+xorg-server
+xorg-xinit
+lightdm
+lightdm-gtk-greeter
+
 # Version control
 git
 github-cli

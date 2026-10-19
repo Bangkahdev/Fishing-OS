@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# test_iso.sh - Boot Fishing OS ISO in QEMU and simulate real user usage.
+# test_iso.sh - Boot Fishing OS ISO in QEMU and validate ISO contents.
 #
 # Usage: ./test_iso.sh <path-to-iso> [path-to-floppy.img]
 #
-# Skrip ini mem-boot ISO melalui QEMU, menyisipkan skrip scenario melalui
-# floppy disk, dan menjalankan simulasi pengguna seolah-olah orang nyata
-# menggunakan Fishing OS untuk keperluan pemrograman.
+# Skrip mem-boot ISO melalui QEMU (jika KVM tersedia), atau memvalidasi
+# berkas ISO tanpa boot (CI tanpa KVM). Tidak ada kegagalan yang diabaikan.
 
 set -euo pipefail
 
@@ -31,33 +30,40 @@ fi
 ISO_SIZE="$(stat -c%s "$ISO")"
 echo "Ukuran ISO: $ISO_SIZE bytes ($((ISO_SIZE / 1024 / 1024)) MiB)" | tee -a "$LOG"
 
-# Deteksi apakah KVM tersedia (untuk boot test yang realistis)
+if [[ "$ISO_SIZE" -gt $((4700 * 1024 * 1024)) ]]; then
+    echo "[FAIL] ISO ukuran $ISO_SIZE bytes melebihi batas 4,7 GiB" | tee -a "$LOG"
+    exit 1
+fi
+echo "[PASS] ISO ukuran wajar (< 4,7 GiB)" | tee -a "$LOG"
+
+# Deteksi KVM yang benar: cek /dev/kvm, bukan /proc/cpuinfo
 HAS_KVM=0
-if kvm-ok >/dev/null 2>&1 || grep -q vmx /proc/cpuinfo 2>/dev/null || grep -q svm /proc/cpuinfo 2>/dev/null; then
+if [[ -c /dev/kvm && -r /dev/kvm && -w /dev/kvm ]]; then
     HAS_KVM=1
 fi
 
-# Deteksi apakah berjalan di CI (tidak ada KVM, environment terbatas)
+# Deteksi CI environment
 IS_CI=0
 if [[ "${CI:-}" == "true" ]] || [[ -n "${GITHUB_ACTIONS:-}" ]]; then
     IS_CI=1
 fi
 
+# Cek apakah qemu-system-x86_64 tersedia
+if ! command -v qemu-system-x86_64 >/dev/null 2>&1; then
+    echo "[FAIL] qemu-system-x86_64 tidak terpasang" | tee -a "$LOG"
+    exit 1
+fi
+
 if [[ "$IS_CI" -eq 1 && "$HAS_KVM" -eq 0 ]]; then
-    echo "INFO: Berjalan di CI tanpa KVM, melewati boot test QEMU (terlalu lambat dengan TCG)" | tee -a "$LOG"
-    echo "Hanya memvalidasi berkas ISO ada dan ukuran wajar." | tee -a "$LOG"
-    if [[ "$ISO_SIZE" -gt 0 && "$ISO_SIZE" -lt $((4700 * 1024 * 1024)) ]]; then
-        echo "[PASS] ISO berkas valid dan ukuran wajar (< 4.7 GiB)" | tee -a "$LOG"
-    else
-        echo "[FAIL] ISO berkas tidak valid atau ukuran melebihi batas" | tee -a "$LOG"
-        exit 1
-    fi
+    echo "INFO: CI tanpa KVM, melewati boot QEMU (TCG terlalu lambat untuk boot ISO)" | tee -a "$LOG"
+    echo "Hanya memvalidasi berkas ISO dan ukuran." | tee -a "$LOG"
+    echo "[PASS] ISO berkas valid dan ukuran wajar (< 4,7 GiB)" | tee -a "$LOG"
     echo | tee -a "$LOG"
     echo "Selesai. Lihat $LOG untuk detail lengkap." | tee -a "$LOG"
     exit 0
 fi
 
-# Siapkan opsi QEMU (hanya dijalankan jika KVM tersedia atau bukan CI)
+# Siapkan opsi QEMU (hanya jika KVM tersedia atau bukan CI)
 QEMU_ARGS=(
     -machine q35
     -m "$VM_MEMORY"
@@ -69,7 +75,6 @@ QEMU_ARGS=(
     -display none
     -nodefaults
     -rtc base=utc
-    -append "console=ttyS0"
 )
 
 if [[ "$HAS_KVM" -eq 1 ]]; then
@@ -84,7 +89,6 @@ fi
 
 echo "Menjalankan QEMU (timeout ${QEMU_TIMEOUT}s)..." | tee -a "$LOG"
 
-# Jalankan QEMU dengan timeout, tangkap output ke log
 timeout "$QEMU_TIMEOUT" qemu-system-x86_64 "${QEMU_ARGS[@]}" > "$LOG" 2>&1 || true
 
 echo | tee -a "$LOG"
@@ -92,7 +96,6 @@ echo "=== Hasil Tes QEMU ===" | tee -a "$LOG"
 
 TEST_FAILED=0
 
-# Verifikasi output penting
 if grep -qi "Fishing OS" "$LOG"; then
     echo "[PASS] Terdeteksi branding Fishing OS di output" | tee -a "$LOG"
 else

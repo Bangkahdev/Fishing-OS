@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 
 iso_name="fishing-os"
-iso_label="FISHINGOS_$(date +%Y%m)"
+iso_label="FISHINGOS_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"
 iso_publisher="Muhammad Dhiyaul Atha"
 iso_application="Fishing OS Live/Rescue DVD"
 iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
