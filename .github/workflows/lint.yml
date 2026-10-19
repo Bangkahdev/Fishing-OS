@@ -15,51 +15,58 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install dependencies
-        run: |
-          pacman -Sy --noconfirm \
-            shellcheck yamllint findutils
+        run: pacman -Syu --noconfirm shellcheck yamllint findutils
 
-      - name: Shellcheck on shell scripts
+      - name: Shellcheck
         run: |
-          shellcheck tests/test_iso.sh \
-            tests/user_scenario.sh profile/profiledef.sh
+          shellcheck -S warning \
+            tests/test_iso.sh \
+            profile/profiledef.sh \
+            profile/airootfs/usr/local/bin/fishing-*
 
-      - name: Validate workflow YAML
-        run: |
-          yamllint .github/workflows/ || true
+      - name: Yamllint
+        run: yamllint -c .yamllint .github/workflows/
 
       - name: Check for zero-byte files
         run: |
-          find . -type f -empty -print | grep -v '^\./\.git/' || true
+          empty="$(find . -type f -empty -not -path './.git/*')"
+          if [[ -n "$empty" ]]; then
+            echo "::error::Berkas kosong (0 byte) ditemukan:"
+            echo "$empty"
+            exit 1
+          fi
+          echo "[PASS] Tidak ada berkas kosong"
 
       - name: Check boot menu branding (no "Arch Linux")
         run: |
           if grep -ril "arch linux" profile/syslinux/ profile/grub/ profile/efiboot/ 2>/dev/null; then
-            echo "ERROR: Found 'Arch Linux' in boot menu files" >&2
+            echo "::error::Teks 'Arch Linux' masih ada di berkas menu boot"
             exit 1
           fi
-          echo "[PASS] No 'Arch Linux' branding in boot menu"
+          echo "[PASS] Tidak ada branding Arch Linux di menu boot"
 
       - name: Check packages exist in Arch repos
         run: |
-          pacman -Sy --noconfirm >/dev/null 2>&1 || true
-          MISSING=0
-          while IFS= read -r pkg; do
-            [[ -z "$pkg" || "$pkg" == \#* ]] && continue
-            if ! pacman -S --print-format "%n" "$pkg" >/dev/null 2>&1; then
-              echo "WARNING: Package '$pkg' not found in Arch repositories"
-              MISSING=1
+          missing=0
+          while IFS= read -r line; do
+            pkg="$(echo "${line%%#*}" | xargs)"
+            [[ -z "$pkg" ]] && continue
+            if ! pacman -Sp -- "$pkg" >/dev/null 2>&1; then
+              echo "::error::Paket tidak ditemukan di repositori Arch: $pkg"
+              missing=$((missing + 1))
             fi
           done < profile/packages.x86_64
-          if [[ "$MISSING" -eq 1 ]]; then
-            echo "WARNING: Some packages may not be available" >&2
+          if (( missing > 0 )); then
+            echo "$missing paket tidak ditemukan"
+            exit 1
           fi
-          echo "[PASS] Package availability check complete"
+          echo "[PASS] Semua paket ada di repositori Arch"

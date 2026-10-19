@@ -5,7 +5,7 @@ iso_name="fishing-os"
 iso_label="FISHINGOS_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"
 iso_publisher="Muhammad Dhiyaul Atha"
 iso_application="Fishing OS Live/Rescue DVD"
-iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
+iso_version="${FISHING_ISO_VERSION:-$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)}"
 install_dir="arch"
 buildmodes=('iso')
 bootmodes=('bios.syslinux'
@@ -25,4 +25,5 @@ file_permissions=(
   ["/usr/local/bin/fishing-check"]="0:0:755"
   ["/usr/local/bin/fishing-container"]="0:0:755"
   ["/usr/local/bin/fishing-setup"]="0:0:755"
+  ["/usr/local/bin/fishing-smoketest"]="0:0:755"
 )

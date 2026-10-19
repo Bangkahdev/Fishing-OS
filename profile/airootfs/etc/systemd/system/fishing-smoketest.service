@@ -1,0 +1,14 @@
+[Unit]
+Description=Fishing OS smoke test (hanya aktif dengan fishing.test=1)
+After=multi-user.target
+ConditionKernelCommandLine=fishing.test=1
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fishing-smoketest
+StandardOutput=journal+console
+StandardError=journal+console
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target
