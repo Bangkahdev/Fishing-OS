@@ -3,9 +3,11 @@ name: CI Fishing OS
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -44,15 +46,6 @@ jobs:
             echo "BUILD_MODE=pr" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check GPG secret availability
-        id: gpg-check
-        run: |
-          if [[ -n "${{ secrets.GPG_PRIVATE_KEY }}" ]]; then
-            echo "HAS_GPG_KEY=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "HAS_GPG_KEY=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Build ISO
         id: build
         env:
@@ -77,36 +70,6 @@ jobs:
           sha256sum fishing-os*.iso > sha256sums.txt
           cat sha256sums.txt
 
-      - name: Run tests
-        if: always()
-        run: |
-          chmod +x tests/test_iso.sh tests/user_scenario.sh
-          ./tests/test_iso.sh out/*.iso || true
-
-      - name: Sign artefacts with CI key
-        if: steps.version.outputs.BUILD_MODE == 'release' && steps.gpg-check.outputs.HAS_GPG_KEY == 'true'
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |
-          set -e
-          TMPDIR="$(mktemp -d)"
-          export GNUPGHOME="$TMPDIR"
-          chmod 700 "$GNUPGHOME"
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
-          cd out
-          GPG_USER="bangkah@mdhiyaulatha.me"
-          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
-            --local-user "$GPG_USER" --detach-sign fishing-os*.iso
-          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
-            --local-user "$GPG_USER" --detach-sign sha256sums.txt
-          gpg --batch --export-ownertrust > ownertrust.txt
-          gpg --armor --export "$GPG_USER" > ci-key.asc
-          gpg --armor --fingerprint "$GPG_USER" > ci-key-fingerprint.txt
-          echo "=== Fingerprint ==="
-          cat ci-key-fingerprint.txt
-          rm -rf "$GNUPGHOME"
-
       - name: Upload PR artifacts
         if: steps.version.outputs.BUILD_MODE == 'pr'
         uses: actions/upload-artifact@v4
@@ -124,24 +87,40 @@ jobs:
           name: fishing-os-release
           path: |
             out/*.iso
-            out/*.iso.sig
             out/sha256sums.txt
-            out/sha256sums.txt.sig
-            out/ci-key-fingerprint.txt
           retention-days: 90
 
-      - name: Create release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          files: |
-            out/*.iso
-            out/*.iso.sig
-            out/sha256sums.txt
-            out/sha256sums.txt.sig
-            out/ci-key-fingerprint.txt
-          generate_release_notes: true
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Install QEMU for testing
+        run: |
+          pacman -Sy --noconfirm qemu-base expect
+
+      - name: Download PR artifacts
+        if: needs.build.outputs.BUILD_MODE == 'pr'
+        uses: actions/download-artifact@v4
+        with:
+          name: fishing-os-iso-pr
+          path: out/
+
+      - name: Download release artifacts
+        if: needs.build.outputs.BUILD_MODE == 'release'
+        uses: actions/download-artifact@v4
+        with:
+          name: fishing-os-release
+          path: out/
+
+      - name: Run ISO tests
+        run: |
+          chmod +x tests/test_iso.sh tests/user_scenario.sh
+          ./tests/test_iso.sh out/*.iso

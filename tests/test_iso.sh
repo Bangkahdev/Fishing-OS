@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_iso.sh - Boot Fishing OS ISO in QEMU and validate ISO contents.
+# test_iso.sh - Boot Fishing OS ISO in QEMU dan validasi konten ISO.
 #
 # Usage: ./test_iso.sh <path-to-iso> [path-to-floppy.img]
 #

@@ -1,0 +1,97 @@
+name: Release Fishing OS
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  sign:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    environment: release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fishing-os-release
+          path: out/
+
+      - name: Install dependencies
+        run: |
+          pacman -Sy --noconfirm gnupg
+
+      - name: Sign artefacts with CI key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -e
+          TMPDIR="$(mktemp -d)"
+          export GNUPGHOME="$TMPDIR"
+          chmod 700 "$GNUPGHOME"
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
+          cd out
+          GPG_USER="bangkah@mdhiyaulatha.me"
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+            --local-user "$GPG_USER" --detach-sign fishing-os*.iso
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+            --local-user "$GPG_USER" --detach-sign sha256sums.txt
+          gpg --batch --export-ownertrust > ownertrust.txt
+          gpg --armor --export "$GPG_USER" > ci-key.asc
+          gpg --armor --fingerprint "$GPG_USER" > ci-key-fingerprint.txt
+          echo "=== Fingerprint ==="
+          cat ci-key-fingerprint.txt
+          rm -rf "$GNUPGHOME"
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fishing-os-release-signed
+          path: |
+            out/*.iso
+            out/*.iso.sig
+            out/sha256sums.txt
+            out/sha256sums.txt.sig
+            out/ci-key-fingerprint.txt
+          retention-days: 90
+
+  release:
+    needs: sign
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download signed artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fishing-os-release-signed
+          path: out/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/*.iso
+            out/*.iso.sig
+            out/sha256sums.txt
+            out/sha256sums.txt.sig
+            out/ci-key-fingerprint.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
