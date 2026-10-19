@@ -5,10 +5,11 @@ After=multi-user.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/fishing-smoketest
-StandardOutput=journal+console
-StandardError=journal+console
+ExecStart=/bin/sh -c 'exec >/dev/ttyS0 2>&1; /usr/local/bin/fishing-smoketest'
+StandardOutput=null
+StandardError=null
 TimeoutStartSec=300
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

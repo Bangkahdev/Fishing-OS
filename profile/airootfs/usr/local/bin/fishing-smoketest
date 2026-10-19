@@ -3,6 +3,11 @@
 # jika kernel diberi parameter fishing.test=1 (lihat tests/test_iso.sh).
 # Semua keluaran berawalan penanda agar mudah dicari di konsol serial.
 
+# Jika tidak dijalankan melalui parameter kernel, keluar diam-diam.
+if ! grep -q 'fishing.test=1' /proc/cmdline 2>/dev/null; then
+    exit 0
+fi
+
 P="FISHING-SMOKETEST:"
 fail=0
 
