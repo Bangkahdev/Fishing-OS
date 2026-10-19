@@ -64,6 +64,7 @@ if [[ "$IS_CI" -eq 1 && "$HAS_KVM" -eq 0 ]]; then
 fi
 
 # Siapkan opsi QEMU (hanya jika KVM tersedia atau bukan CI)
+# shellcheck disable=SC2054
 QEMU_ARGS=(
     -machine q35
     -m "$VM_MEMORY"
