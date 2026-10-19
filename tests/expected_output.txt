@@ -3,7 +3,7 @@
 
 EXPECTED=(
     "Fishing OS"
-    "devops-check"
+    "fishing-check"
     "docker"
     "kubectl"
     "terraform"

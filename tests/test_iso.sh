@@ -33,7 +33,6 @@ QEMU_ARGS=(
     -machine q35
     -m "$VM_MEMORY"
     -smp "$VM_CPUS"
-    -cpu host
     -drive file="$ISO",format=raw,media=cdrom,index=0
     -boot order=d
     -vga std
@@ -41,11 +40,12 @@ QEMU_ARGS=(
     -display none
     -nodefaults
     -rtc base=utc
+    -append "console=ttyS0"
 )
 
-# Gunakan KVM jika tersedia, fallback ke TCG (WSL-friendly)
+# Gunakan KVM jika tersedia, fallback ke TCG (tanpa -cpu host pada TCG)
 if kvm-ok >/dev/null 2>&1 || grep -q vmx /proc/cpuinfo 2>/dev/null || grep -q svm /proc/cpuinfo 2>/dev/null; then
-    QEMU_ARGS+=(-enable-kvm)
+    QEMU_ARGS+=(-enable-kvm -cpu host)
 else
     echo "INFO: KVM tidak tersedia, menggunakan TCG (lebih lambat)" | tee -a "$LOG"
 fi
@@ -62,30 +62,40 @@ timeout "$QEMU_TIMEOUT" qemu-system-x86_64 "${QEMU_ARGS[@]}" > "$LOG" 2>&1 || tr
 echo | tee -a "$LOG"
 echo "=== Hasil Tes QEMU ===" | tee -a "$LOG"
 
+TEST_FAILED=0
+
 # Verifikasi output penting
 if grep -qi "Fishing OS" "$LOG"; then
     echo "[PASS] Terdeteksi branding Fishing OS di output" | tee -a "$LOG"
 else
     echo "[FAIL] Branding Fishing OS tidak ditemukan" | tee -a "$LOG"
+    TEST_FAILED=1
 fi
 
 if grep -qi "fishing-check" "$LOG"; then
     echo "[PASS] Perintah fishing-check terdeteksi" | tee -a "$LOG"
 else
-    echo "[WARN] Perintah fishing-check tidak ditemukan dalam output" | tee -a "$LOG"
+    echo "[FAIL] Perintah fishing-check tidak ditemukan dalam output" | tee -a "$LOG"
+    TEST_FAILED=1
 fi
 
 if grep -qi "docker\|kubectl\|terraform\|ansible" "$LOG"; then
     echo "[PASS] Alat DevOps terdeteksi dalam output" | tee -a "$LOG"
 else
-    echo "[WARN] Alat DevOps utama tidak terdeteksi dalam output" | tee -a "$LOG"
+    echo "[FAIL] Alat DevOps utama tidak terdeteksi dalam output" | tee -a "$LOG"
+    TEST_FAILED=1
 fi
 
-if grep -qi "liveuser\|login\|tty" "$LOG"; then
-    echo "[PASS] VM mencapai tampilan login/console" | tee -a "$LOG"
+if grep -qi "liveuser" "$LOG"; then
+    echo "[PASS] VM mencapai tampilan login/console (liveuser)" | tee -a "$LOG"
 else
-    echo "[WARN] Tampilan login tidak terdeteksi" | tee -a "$LOG"
+    echo "[FAIL] Tampilan login liveuser tidak terdeteksi" | tee -a "$LOG"
+    TEST_FAILED=1
 fi
 
 echo | tee -a "$LOG"
 echo "Selesai. Lihat $LOG untuk detail lengkap." | tee -a "$LOG"
+
+if [[ "$TEST_FAILED" -ne 0 ]]; then
+    exit 1
+fi

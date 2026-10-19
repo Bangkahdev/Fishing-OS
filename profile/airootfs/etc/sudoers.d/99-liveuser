@@ -1,2 +1,2 @@
-# Mengizinkan liveuser menjalankan installer tanpa password
-liveuser ALL=(ALL) NOPASSWD: /usr/bin/calamares
+# Mengizinkan liveuser menjalankan alat Fishing OS tanpa password
+liveuser ALL=(ALL) NOPASSWD: /usr/local/bin/fishing-check, /usr/local/bin/fishing-container, /usr/local/bin/fishing-setup

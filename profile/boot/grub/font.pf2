@@ -1,1 +1,0 @@
-grub-mkfont -o font.pf2 -s 24 /usr/share/fonts/TTF/DejaVuSansMono.ttf
