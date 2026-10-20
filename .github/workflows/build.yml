@@ -43,6 +43,7 @@ jobs:
       - name: Determine ISO version and SOURCE_DATE_EPOCH
         id: version
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           SDE="$(git -C "$GITHUB_WORKSPACE" log -1 --format=%ct HEAD)"
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
             if [[ "$GITHUB_REF_NAME" =~ ^v([0-9]{4})\.([0-9]{2})\.([0-9]+)$ ]]; then
