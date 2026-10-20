@@ -203,6 +203,7 @@ jobs:
       - name: Upload ISO to GitHub if it fits the 2 GiB asset limit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
@@ -218,6 +219,7 @@ jobs:
         if: needs.mirror.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
           MIRROR_BASE: ${{ needs.mirror.outputs.base-url }}
         run: |
