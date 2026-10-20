@@ -11,6 +11,8 @@
 | **Changelog 1.1** | Nama distro: Fishing OS; domain ditandai sebagai keputusan pending |
 | **Changelog 1.2** | Domain dikunci: `mdhiyaulatha.me` (D-5 final), semua placeholder terisi |
 | **Changelog 1.3** | Seksi 6 disederhanakan untuk proyek satu orang — tetap ada sebagai jejak audit |
+| **Changelog 1.4** | Batas ukuran ISO menjadi ≤ 2000 MiB (batas aset GitHub Releases); DE dan browser ditunda ke fase 2; validasi menu boot ditambahkan ke lint CI |
+| **Changelog 1.5** | Mirror rilis ke Cloudflare R2 (opsional, `FR-CI-11`) |
 | **Basis** | archiso (profil `releng`), target x86_64 |
 
 - Distro: **Fishing OS** (`iso_name=fishing-os`)
@@ -66,10 +68,10 @@ Distribusi live USB/Linux yang dapat di-boot langsung, berisi lingkungan desktop
 | --- | --- | --- | --- |
 | FR-ISO-01 | Profil dibangun dari `releng` sebagai basis, disalin ke direktori repo `profile/` | Must | Final |
 | FR-ISO-02 | `profiledef.sh` menetapkan `iso_name=fishing-os`, `iso_label=FISHINGOS_YYYYMM`, `iso_publisher` | Must | Final |
-| FR-ISO-03 | Daftar paket diatur di `packages.x86_64`; tambahan wajib: DE, browser, editor, utilitas sistem | Must | Final |
+| FR-ISO-03 | Daftar paket diatur di `packages.x86_64`; tambahan wajib: editor, utilitas sistem, toolchain DevOps. DE dan browser ditunda ke fase 2 | Must | Final (revisi 1.4) |
 | FR-ISO-04 | `airootfs/` berisi konfigurasi: hostname `FishingOS`, user live default, service yang di-enable | Must | Final |
 | FR-ISO-05 | Bootloader menampilkan branding Fishing OS (menu GRUB/syslinux) | Should | Final |
-| FR-ISO-06 | Ukuran ISO hasil build ≤ 4,7 GiB (batas DVD) | Should | Final |
+| FR-ISO-06 | Ukuran ISO hasil build ≤ 2000 MiB (batas aset GitHub Releases) | Must | Final (revisi 1.4) |
 
 ## 3.2 Pipeline CI (FR-CI)
 
@@ -85,6 +87,7 @@ Distribusi live USB/Linux yang dapat di-boot langsung, berisi lingkungan desktop
 | FR-CI-08 | Halaman rilis otomatis berisi changelog dari commit sejak tag sebelumnya | Should | Final |
 | FR-CI-09 | Fingerprint kunci penandatangan dipublikasikan sebagai teks plain di setiap halaman rilis | Must | Final |
 | FR-CI-10 | Penandatanganan GPG & publikasi ISO — lihat §3.3 | Must | Final |
+| FR-CI-11 | Mirror artefak rilis ke Cloudflare R2 bila secrets R2 tersedia; tautan mirror ditambahkan ke catatan rilis | Should | Final (revisi 1.5) |
 
 ## 3.3 Penandatanganan GPG & Publikasi ISO — FR-CI-10 (Final)
 
@@ -146,7 +149,7 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 | FR-CI-10.1 | Audit repo: `git log -p` bebas kunci; audit Secrets (hanya org admin) |
 | FR-CI-10.2 | Rilis uji di repo sandbox, verifikasi artefak lengkap |
 | FR-CI-10.4 | Prosedur verifikasi dijalankan dari mesin bersih (tanpa keyring lama) |
-| NFR-02 | Uji boot UEFI + BIOS di QEMU tiap rilis |
+| NFR-02 | Uji boot UEFI + BIOS di QEMU tiap rilis; label default menu divalidasi statis (`tests/check_bootmenu.sh`) di lint CI |
 
 ---
 
