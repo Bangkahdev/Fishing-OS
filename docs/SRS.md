@@ -5,18 +5,19 @@
 |  |  |
 | --- | --- |
 | **Dokumen** | SRS-FINAL |
-| **Versi** | 1.3 |
-| **Status** | Final — disetujui untuk implementasi |
-| **Tanggal** | 2026-10-19 |
+| **Versi** | 1.6 |
+| **Status** | Final — direvisi 2026-10-21 |
+| **Tanggal** | 2026-10-21 |
 | **Changelog 1.1** | Nama distro: Fishing OS; domain ditandai sebagai keputusan pending |
 | **Changelog 1.2** | Domain dikunci: `mdhiyaulatha.me` (D-5 final), semua placeholder terisi |
 | **Changelog 1.3** | Seksi 6 disederhanakan untuk proyek satu orang — tetap ada sebagai jejak audit |
-| **Changelog 1.4** | Batas ukuran ISO menjadi ≤ 2000 MiB (batas aset GitHub Releases); DE dan browser ditunda ke fase 2; validasi menu boot ditambahkan ke lint CI |
+| **Changelog 1.4** | Batas ukuran ISO menjadi ≤ 2000 MiB (batas aset GitHub Releases); DE dan browser ditunda ke fase 2; validasi menu boot ditambah ke lint CI |
 | **Changelog 1.5** | Mirror rilis ke Cloudflare R2 (opsional, `FR-CI-11`) |
-| **Basis** | archiso (profil `releng`), target x86_64 |
+| **Changelog 1.6** | ISO fase 1 dinyatakan live medium konsol (zsh, alat DevOps) — bukan desktop; WKD dicatat via metode direct; smoke test di VM wajib lulus sebelum rilis; backlog fase 2 (DE, installer, CLI `fishing`) dicatat di §7 |
+| **Basis** | archiso (profil `releng`), target x86_64, live medium konsol |
 
 - Distro: **Fishing OS** (`iso_name=fishing-os`)
-- Domain: **`mdhiyaulatha.me`** (WKD aktif di `openpgpkey.mdhiyaulatha.me`)
+- Domain: **`mdhiyaulatha.me`** (WKD aktif via metode direct `https://mdhiyaulatha.me/.well-known/openpgpkey/hu/<hash>`; subdomain `openpgpkey.mdhiyaulatha.me` belum dikonfigurasi)
 
 ---
 
@@ -29,7 +30,7 @@ Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk distrib
 ## 1.2 Ruang Lingkup
 
 Termasuk: konfigurasi profil archiso, daftar paket, branding, pipeline CI (build–sign–publish), prosedur verifikasi pengguna, manajemen kunci.
-Tidak termasuk: installer ke disk (out of scope fase 1), repositori paket kustom, arsitektur non-x86_64.
+Tidak termasuk pada fase 1: installer ke disk (lihat §7), lingkungan desktop & browser (fase 2, §7), repositori paket kustom, arsitektur non-x86_64.
 
 ## 1.3 Definisi
 
@@ -44,7 +45,7 @@ Tidak termasuk: installer ke disk (out of scope fase 1), repositori paket kustom
 
 ## 2.1 Fungsi Produk
 
-Distribusi live USB/Linux yang dapat di-boot langsung, berisi lingkungan desktop siap pakai, dengan kepercayaan rilis yang dapat diverifikasi secara kriptografis oleh pengguna.
+Distribusi live USB/Linux yang dapat di-boot langsung, berbasis konsol (zsh) dengan toolchain DevOps siap pakai, dengan kepercayaan rilis yang dapat diverifikasi secara kriptografis oleh pengguna. Lingkungan desktop ditunda ke fase 2 (§7).
 
 ## 2.2 Kelas Pengguna
 
@@ -68,7 +69,7 @@ Distribusi live USB/Linux yang dapat di-boot langsung, berisi lingkungan desktop
 | --- | --- | --- | --- |
 | FR-ISO-01 | Profil dibangun dari `releng` sebagai basis, disalin ke direktori repo `profile/` | Must | Final |
 | FR-ISO-02 | `profiledef.sh` menetapkan `iso_name=fishing-os`, `iso_label=FISHINGOS_YYYYMM`, `iso_publisher` | Must | Final |
-| FR-ISO-03 | Daftar paket diatur di `packages.x86_64`; tambahan wajib: editor, utilitas sistem, toolchain DevOps. DE dan browser ditunda ke fase 2 | Must | Final (revisi 1.4) |
+| FR-ISO-03 | Daftar paket diatur di `packages.x86_64`; tambahan wajib: editor, utilitas sistem, toolchain DevOps. Shell default zsh; DE dan browser ditunda ke fase 2 (§7) | Must | Final (revisi 1.6) |
 | FR-ISO-04 | `airootfs/` berisi konfigurasi: hostname `FishingOS`, user live default, service yang di-enable | Must | Final |
 | FR-ISO-05 | Bootloader menampilkan branding Fishing OS (menu GRUB/syslinux) | Should | Final |
 | FR-ISO-06 | Ukuran ISO hasil build ≤ 2000 MiB (batas aset GitHub Releases) | Must | Final (revisi 1.4) |
@@ -88,6 +89,8 @@ Distribusi live USB/Linux yang dapat di-boot langsung, berisi lingkungan desktop
 | FR-CI-09 | Fingerprint kunci penandatangan dipublikasikan sebagai teks plain di setiap halaman rilis | Must | Final |
 | FR-CI-10 | Penandatanganan GPG & publikasi ISO — lihat §3.3 | Must | Final |
 | FR-CI-11 | Mirror artefak rilis ke Cloudflare R2 bila secrets R2 tersedia; tautan mirror ditambahkan ke catatan rilis | Should | Final (revisi 1.5) |
+| FR-CI-12 | Setiap halaman rilis wajib memuat `*.iso`, `*.iso.sig`, `sha256sums.txt`, `sha256sums.txt.sig`, dan `ci-key-fingerprint.txt` | Must | Final (revisi 1.6) |
+| FR-CI-13 | Rilis hanya diterbitkan setelah smoke test boot di VM lulus (`FISHING-SMOKETEST: PASS`) | Must | Final (revisi 1.6) |
 
 ## 3.3 Penandatanganan GPG & Publikasi ISO — FR-CI-10 (Final)
 
@@ -107,7 +110,7 @@ Private key **tidak pernah** disimpan di repositori git dalam bentuk apa pun. Ku
 
 ### 3. Kanal Publikasi Fingerprint (dua kanal independen)
 
-- **WKD**: `openpgpkey.mdhiyaulatha.me` — memungkinkan `gpg --locate-keys bangkah@mdhiyaulatha.me`.
+- **WKD**: metode direct di `https://mdhiyaulatha.me/.well-known/openpgpkey/hu/<hash>` (hash = z-base-32 dari SHA-1 local-part) — memungkinkan `gpg --locate-keys bangkah@mdhiyaulatha.me`. Subdomain `openpgpkey.mdhiyaulatha.me` (metode advanced) belum dikonfigurasi.
 - **Situs resmi**: halaman `/verifikasi` berisi fingerprint dan prosedur verifikasi.
 
 ### 4. Verifikasi oleh Pengguna
@@ -134,7 +137,7 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 | --- | --- | --- |
 | NFR-01 | Waktu build ISO di CI | ≤ 60 menit |
 | NFR-02 | ISO dapat boot di mode UEFI dan Legacy BIOS | 100% rilis wajib lolos |
-| NFR-03 | Boot ke desktop siap pakai | ≤ 90 detik di VM (2 vCPU, 4 GiB) |
+| NFR-03 | Boot ke login prompt konsol | ≤ 90 detik di VM (2 vCPU, 4 GiB); waktu boot desktop diukur pada fase 2 |
 | NFR-04 | Reproducibility | build ulang dari commit yang sama menghasilkan checksum identik *(stretch goal — tidak menghalangi rilis fase 1)* |
 
 ---
@@ -143,12 +146,15 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 
 | Kebutuhan | Metode verifikasi |
 | --- | --- |
-| FR-ISO-01..05 | Boot ISO hasil CI di QEMU (`run_archiso`), checklist manual |
+| FR-ISO-01..05 | Boot ISO hasil CI di QEMU (`tests/test_iso.sh`) + lint statis menu boot (`tests/check_bootmenu.sh`) |
 | FR-ISO-06 | Assertion di workflow: `stat -c%s` vs batas |
 | FR-CI-01..05 | Uji pipeline: push dummy, inspeksi log (tidak ada secret bocor) |
 | FR-CI-10.1 | Audit repo: `git log -p` bebas kunci; audit Secrets (hanya org admin) |
 | FR-CI-10.2 | Rilis uji di repo sandbox, verifikasi artefak lengkap |
+| FR-CI-10.3 | WKD: `gpg --auto-key-locate wkd --locate-keys bangkah@mdhiyaulatha.me` dari mesin bersih harus berhasil |
 | FR-CI-10.4 | Prosedur verifikasi dijalankan dari mesin bersih (tanpa keyring lama) |
+| FR-CI-12 | Inspeksi aset halaman rilis: ISO, `.sig`, checksum, fingerprint semuanya ada |
+| FR-CI-13 | Log job smoke-test berisi `FISHING-SMOKETEST: PASS` sebelum job sign/release jalan |
 | NFR-02 | Uji boot UEFI + BIOS di QEMU tiap rilis; label default menu divalidasi statis (`tests/check_bootmenu.sh`) di lint CI |
 
 ---
@@ -162,6 +168,8 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 | D-3 | Basis profil | `releng` (bukan `baseline`) |
 | D-4 | Platform CI | GitHub Actions |
 | D-5 | Domain resmi | `mdhiyaulatha.me` (keputusan: gunakan domain portfolio, WKD aktif) |
+| D-6 | Lingkungan desktop | Ditunda ke fase 2 (§7); ISO fase 1 berbasis konsol |
+| D-7 | Penomoran versi | Tag `vYYYY.MM.N` menentukan versi ISO; N = rilis ke-N dalam bulan |
 
 ---
 
@@ -172,3 +180,17 @@ Proyek ini dikerjakan oleh satu orang; seluruh peran (pembuat produk, rilis mana
 | Peran | Nama | Tanda tangan | Tanggal |
 | --- | --- | --- | --- |
 | Pembuat & Rilis Manager | Muhammad Dhiyaul Atha | *Bangkah* | 2026-10-19 |
+| Revisi 1.6 | Muhammad Dhiyaul Atha | *Bangkah* | 2026-10-21 |
+
+---
+
+# 7. Backlog Fase 2 (di luar SRS ini)
+
+Item berikut sengaja **tidak** menjadi bagian SRS v1.6; dicatat di sini agar keputusan tidak hilang.
+
+- **Lingkungan desktop** — pilih XFCE atau Hyprland; butuh server tampilan (Xorg/Wayland), display manager, dan konfigurasi autostart.
+- **Installer ke disk** — mis. `archinstall`; butuh jaringan dan perencanaan partisi.
+- **CLI `fishing`** — manajemen alat on-demand; butuh mekanisme instalasi paket (skrip atau repositori kustom).
+- **Browser & aplikasi kantor ringan**.
+
+Setiap item wajib direvisi ke SRS terpisah sebelum dikerjakan. Penambahan paket dapat menaikkan ukuran ISO, sehingga batas FR-ISO-06 (2000 MiB) perlu dievaluasi ulang.
