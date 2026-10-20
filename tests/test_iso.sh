@@ -133,14 +133,18 @@ TIMED_OUT=0
 SECONDS=0
 BOOTED=0
 SMOKE_PASSED=0
+SMOKE_FAILED=0
 while kill -0 "$QEMU_PID" 2>/dev/null; do
     if grep -qF "$MARK PASS" "$SERIAL_LOG"; then
         SMOKE_PASSED=1
         break
     fi
+    if grep -qF "$MARK FAIL" "$SERIAL_LOG"; then
+        SMOKE_FAILED=1
+        break
+    fi
     if grep -q "login:" "$SERIAL_LOG"; then
         BOOTED=1
-        break
     fi
     if (( SECONDS >= QEMU_TIMEOUT )); then
         TIMED_OUT=1
@@ -162,7 +166,7 @@ grep -F "$MARK" "$SERIAL_LOG" >> "$LOG" || true
 
 if (( TIMED_OUT )); then
     show_serial_tail
-    fail "Timeout ${QEMU_TIMEOUT}s: VM tidak mencapai login prompt atau penanda '$MARK PASS'"
+    fail "Timeout ${QEMU_TIMEOUT}s: penanda '$MARK PASS' tidak muncul"
 fi
 
 if (( SMOKE_PASSED )); then
@@ -170,14 +174,14 @@ if (( SMOKE_PASSED )); then
     exit 0
 fi
 
+if (( SMOKE_FAILED )); then
+    show_serial_tail
+    fail "Smoke test di dalam VM melaporkan kegagalan (lihat baris MISSING/BAD)"
+fi
+
 if (( BOOTED )); then
-    pass "VM boot berhasil hingga login prompt"
-    if grep -qF "$MARK FAIL" "$SERIAL_LOG"; then
-        fail "Smoke test di dalam VM melaporkan kegagalan (lihat baris MISSING/BAD)"
-    fi
-    log "Catatan: penanda '$MARK PASS' tidak terdeteksi (fishing-smoketest.service mungkin tidak terpicu otomatis)"
-    exit 0
+    log "Catatan: login prompt terdeteksi, tetapi penanda '$MARK PASS' tidak muncul"
 fi
 
 show_serial_tail
-fail "QEMU berhenti tanpa mencapai login prompt atau penanda '$MARK PASS' (lihat $QEMU_ERR_LOG)"
+fail "VM tidak melaporkan '$MARK PASS' (lihat $QEMU_ERR_LOG)"

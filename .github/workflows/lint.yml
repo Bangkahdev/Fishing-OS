@@ -30,8 +30,12 @@ jobs:
         run: |
           shellcheck -S warning \
             tests/test_iso.sh \
+            tests/check_bootmenu.sh \
             profile/profiledef.sh \
             profile/airootfs/usr/local/bin/fishing-*
+
+      - name: Check boot menu defaults
+        run: bash tests/check_bootmenu.sh
 
       - name: Yamllint
         run: yamllint -c .yamllint .github/workflows/
