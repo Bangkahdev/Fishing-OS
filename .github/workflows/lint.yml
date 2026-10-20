@@ -37,6 +37,16 @@ jobs:
       - name: Check boot menu defaults
         run: bash tests/check_bootmenu.sh
 
+      - name: Check systemd .wants entries are symlinks
+        run: |
+          bad="$(find profile/airootfs -type f -path '*.wants/*')"
+          if [[ -n "$bad" ]]; then
+            echo "::error::Entri .wants harus symlink, bukan berkas biasa (unit tidak akan aktif):"
+            echo "$bad"
+            exit 1
+          fi
+          echo "[PASS] Semua entri .wants adalah symlink"
+
       - name: Yamllint
         run: yamllint -c .yamllint .github/workflows/
 
