@@ -31,7 +31,7 @@ Dibangun menggunakan [archiso](https://wiki.archlinux.org/title/Archiso) dengan 
 | Orkestrasi | kubectl, helm |
 | IaC & Config Mgmt | terraform, ansible |
 | Bahasa | python3, nodejs, go |
-| Build | make, cmake, gcc, clang, gdb |
+| Build | make, cmake, gcc, gdb |
 | Jaringan & Debug | curl, jq, tcpdump, nmap, ssh, mtr |
 | Shell & Terminal | zsh, fish, vim, neovim, tmux, fzf, bat, ripgrep |
 
