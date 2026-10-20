@@ -162,16 +162,25 @@ wait "$QEMU_PID" 2>/dev/null || true
 QEMU_PID=""
 
 # --- 4. Evaluasi ---
-grep -F "$MARK" "$SERIAL_LOG" >> "$LOG" || true
-
-if (( TIMED_OUT )); then
-    show_serial_tail
-    fail "Timeout ${QEMU_TIMEOUT}s: penanda '$MARK PASS' tidak muncul"
+# QEMU bisa sudah keluar (poweroff di dalam VM) sebelum iterasi berikutnya
+# sempat melihat penanda; periksa sekali lagi isi log serial.
+if (( ! SMOKE_PASSED )) && grep -qF "$MARK PASS" "$SERIAL_LOG"; then
+    SMOKE_PASSED=1
 fi
+if (( ! SMOKE_FAILED )) && grep -qF "$MARK FAIL" "$SERIAL_LOG"; then
+    SMOKE_FAILED=1
+fi
+
+grep -F "$MARK" "$SERIAL_LOG" >> "$LOG" || true
 
 if (( SMOKE_PASSED )); then
     pass "Smoke test di dalam VM lulus"
     exit 0
+fi
+
+if (( TIMED_OUT )); then
+    show_serial_tail
+    fail "Timeout ${QEMU_TIMEOUT}s: penanda '$MARK PASS' tidak muncul"
 fi
 
 if (( SMOKE_FAILED )); then
