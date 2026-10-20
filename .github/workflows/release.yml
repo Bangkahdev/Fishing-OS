@@ -97,6 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
+    environment: release
     defaults:
       run:
         shell: bash
@@ -143,6 +144,8 @@ jobs:
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           R2_PUBLIC_BASE_URL: ${{ steps.cfg.outputs.base-url }}
           TAG: ${{ github.ref_name }}
+          # Token Object Read & Write tidak bisa melihat daftar bucket.
+          RCLONE_CONFIG_R2_NO_CHECK_BUCKET: 'true'
         run: |
           set -euo pipefail
           export RCLONE_CONFIG_R2_TYPE=s3
