@@ -68,10 +68,15 @@ jobs:
             exit 1
           fi
           size="$(stat -c%s "${isos[0]}")"
-          max=$((4700 * 1024 * 1024))
+          # GitHub Releases menolak berkas >= 2 GiB (2048 MiB); sisakan margin.
+          max=$((2000 * 1024 * 1024))
           echo "ISO: ${isos[0]} ($((size / 1024 / 1024)) MiB, batas $((max / 1024 / 1024)) MiB)"
+          echo "--- 25 paket terbesar (ukuran terpasang) ---"
+          pacman --dbpath work/x86_64/airootfs/var/lib/pacman -Qi \
+            | awk '/^Name/ {n=$3} /^Installed Size/ {v=$4; if ($5=="KiB") v/=1024; else if ($5=="GiB") v*=1024; printf "%8.1f MiB  %s\n", v, n}' \
+            | sort -rn | sed -n 1,25p
           if (( size > max )); then
-            echo "::error::Ukuran ISO melebihi batas 4,7 GiB"
+            echo "::error::ISO melebihi batas 2000 MiB (batas berkas GitHub Releases 2 GiB)"
             exit 1
           fi
           rm -rf work

@@ -4,7 +4,7 @@
 # Usage: ./test_iso.sh <path-to-iso>
 #
 # Langkah:
-#   1. Validasi berkas ISO: ada, ukuran <= 4,7 GiB, checksum (jika
+#   1. Validasi berkas ISO: ada, ukuran <= 2000 MiB, checksum (jika
 #      sha256sums.txt ada di folder yang sama).
 #   2. Ekstrak kernel dan initramfs dari ISO, lalu boot langsung di QEMU
 #      dengan console=ttyS0 dan fishing.test=1.
@@ -29,7 +29,7 @@ SERIAL_LOG="${SERIAL_LOG:-qemu-serial.log}"
 QEMU_ERR_LOG="${QEMU_ERR_LOG:-qemu-stderr.log}"
 VM_MEMORY="${VM_MEMORY:-3G}"
 VM_CPUS="${VM_CPUS:-2}"
-MAX_SIZE=$((4700 * 1024 * 1024))
+MAX_SIZE=$((2000 * 1024 * 1024))
 MARK="FISHING-SMOKETEST:"
 
 WORKDIR="$(mktemp -d)"
@@ -68,7 +68,7 @@ log "Tanggal: $(date -u)"
 ISO_SIZE="$(stat -c%s "$ISO")"
 log "Ukuran ISO: $((ISO_SIZE / 1024 / 1024)) MiB"
 if (( ISO_SIZE > MAX_SIZE )); then
-    fail "ISO melebihi batas 4,7 GiB"
+    fail "ISO melebihi batas 2000 MiB"
 fi
 pass "Ukuran ISO dalam batas"
 
