@@ -1,24 +1,32 @@
 #!/usr/bin/env bash
 # Setup awal Fishing OS (jalankan sebagai root)
+set -euo pipefail
 
 echo "== Setup awal Fishing OS =="
 
-# Enable layanan dasar
-systemctl enable NetworkManager 2>/dev/null || true
+# Live ISO memakai systemd-networkd + iwd (bukan NetworkManager).
+systemctl enable systemd-networkd systemd-resolved iwd 2>/dev/null || true
 systemctl enable sshd 2>/dev/null || true
 
-# Buat user dev jika belum ada
-if ! id dev >/dev/null 2>&1; then
-    useradd -m -G wheel,docker -s /bin/zsh dev
-    echo "User 'dev' dibuat."
-else
+if id dev >/dev/null 2>&1; then
     echo "User 'dev' sudah ada."
+else
+    useradd -m -G wheel,docker -s /bin/zsh dev
+    if [[ -t 0 ]]; then
+        read -r -s -p "Password untuk user 'dev': " dev_password
+        echo
+        printf 'dev:%s\n' "${dev_password}" | chpasswd
+        unset dev_password
+    else
+        echo "Password 'dev' belum diatur. Jalankan: passwd dev" >&2
+    fi
+    echo "User 'dev' dibuat."
 fi
 
-# Izinkan wheel pakai sudo tanpa password (opsional, untuk live ISO)
+# Live medium: sudo tanpa password untuk grup wheel (hilang setelah reboot).
 if [[ ! -f /etc/sudoers.d/dev ]]; then
-    echo "%wheel ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/dev
+    printf '%%wheel ALL=(ALL:ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/dev
     chmod 440 /etc/sudoers.d/dev
 fi
 
-echo "Selesai. Anda dapat login sebagai 'dev' atau gunakan root langsung."
+echo "Selesai. Login sebagai 'dev' (sudo tanpa password) atau gunakan root langsung."

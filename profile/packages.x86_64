@@ -13,10 +13,9 @@ syslinux
 efibootmgr
 systemd
 systemd-resolvconf
-networkmanager
-dhcpcd
 iwd
 wpa_supplicant
+modemmanager
 openssh
 sudo
 polkit
@@ -36,6 +35,16 @@ terminus-font
 # Version control
 git
 github-cli
+
+# Containers & orchestration
+docker
+docker-compose
+kubectl
+helm
+
+# IaC & configuration management
+terraform
+ansible-core
 
 # Languages & runtimes
 python
@@ -70,6 +79,11 @@ ripgrep
 fzf
 htop
 
+# Accessibility (opsi boot "with speech")
+espeak-ng
+espeakup
+alsa-utils
+
 # Firmware & microcode
 amd-ucode
 intel-ucode
@@ -92,6 +106,8 @@ gzip
 bzip2
 xz
 zstd
+memtest86+
+memtest86+-efi
 edk2-shell
 efivar
 dmidecode

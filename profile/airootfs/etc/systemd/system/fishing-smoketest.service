@@ -1,6 +1,5 @@
 [Unit]
 Description=Fishing OS smoke test (hanya aktif dengan fishing.test=1)
-After=multi-user.target
 ConditionKernelCommandLine=fishing.test=1
 
 [Service]
