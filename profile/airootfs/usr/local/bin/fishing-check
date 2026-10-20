@@ -28,7 +28,6 @@ check java
 check make
 check cmake
 check gcc
-check clang
 check jq
 check ssh
 

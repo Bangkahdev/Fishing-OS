@@ -64,7 +64,6 @@ mtr
 traceroute
 
 # Productivity & dev helpers
-shellcheck
 bat
 fd
 ripgrep
