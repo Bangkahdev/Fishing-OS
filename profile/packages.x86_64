@@ -33,29 +33,11 @@ neovim
 nano
 terminus-font
 
-# Desktop & X11 (DE, browser, editor per SRS FR-ISO-03)
-xfce4
-firefox
-xorg-server
-xorg-xinit
-lightdm
-lightdm-gtk-greeter
-
 # Version control
 git
 github-cli
 
-# Containers & orchestration (intihanya, ukuran besar)
-docker
-docker-compose
-kubectl
-helm
-
-# IaC & configuration management
-terraform
-ansible
-
-# Languages & runtimes (intihanya)
+# Languages & runtimes
 python
 python-pip
 nodejs
@@ -66,7 +48,6 @@ go
 make
 cmake
 gcc
-clang
 gdb
 
 # Networking & debugging utilities
@@ -74,7 +55,6 @@ curl
 wget
 jq
 inetutils
-bind
 net-tools
 iproute2
 tcpdump
@@ -94,8 +74,6 @@ htop
 # Firmware & microcode
 amd-ucode
 intel-ucode
-linux-firmware-marvell
-sof-firmware
 wireless-regdb
 wireless_tools
 
