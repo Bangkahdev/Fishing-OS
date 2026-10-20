@@ -1,1 +1,1 @@
-[[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && startxfce4
+# Shell default adalah zsh; lihat /root/.zlogin.

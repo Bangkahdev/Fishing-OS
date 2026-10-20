@@ -92,8 +92,89 @@ jobs:
           compression-level: 0
           if-no-files-found: error
 
-  release:
+  mirror:
     needs: sign
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      enabled: ${{ steps.cfg.outputs.enabled }}
+      base-url: ${{ steps.cfg.outputs.base-url }}
+
+    steps:
+      - name: Download signed artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fishing-os-release-signed
+          path: out/
+
+      - name: Check Cloudflare R2 configuration
+        id: cfg
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_PUBLIC_BASE_URL: ${{ vars.R2_PUBLIC_BASE_URL }}
+        run: |
+          if [[ -z "${R2_ACCOUNT_ID}" || -z "${R2_ACCESS_KEY_ID}" ||
+                -z "${R2_SECRET_ACCESS_KEY}" || -z "${R2_BUCKET}" ||
+                -z "${R2_PUBLIC_BASE_URL}" ]]; then
+            echo "::warning::Mirror R2 dilewati: secrets/vars R2 belum lengkap"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "base-url=${R2_PUBLIC_BASE_URL%/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install rclone
+        if: steps.cfg.outputs.enabled == 'true'
+        run: pacman -Syu --noconfirm rclone
+
+      - name: Upload release files and mirror manifest to Cloudflare R2
+        if: steps.cfg.outputs.enabled == 'true'
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_PUBLIC_BASE_URL: ${{ steps.cfg.outputs.base-url }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          export RCLONE_CONFIG_R2_TYPE=s3
+          export RCLONE_CONFIG_R2_PROVIDER=Cloudflare
+          export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
+          export RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+          export RCLONE_CONFIG_R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+
+          dest="r2:${R2_BUCKET}/releases/${TAG}"
+          base="${R2_PUBLIC_BASE_URL}/releases/${TAG}"
+          rclone copy out/ "${dest}/" \
+            --include "fishing-os-*.iso" \
+            --include "*.sig" \
+            --include "sha256sums.txt" \
+            --include "ci-key-fingerprint.txt" \
+            --header-upload "Cache-Control: public, max-age=31536000, immutable"
+
+          {
+            echo "base_url=${base}"
+            for f in out/*.iso out/*.iso.sig out/sha256sums.txt \
+              out/sha256sums.txt.sig out/ci-key-fingerprint.txt; do
+              printf '%s  %s/%s\n' "$(basename "$f")" "${base}" "$(basename "$f")"
+            done
+          } > out/mirrors.txt
+          rclone copyto out/mirrors.txt "${dest}/mirrors.txt" \
+            --header-upload "Cache-Control: public, max-age=300"
+
+          rclone ls "${dest}" | sort
+          cat out/mirrors.txt
+
+  release:
+    needs: [sign, mirror]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -109,7 +190,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            out/*.iso
             out/*.iso.sig
             out/sha256sums.txt
             out/sha256sums.txt.sig
@@ -119,3 +199,39 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload ISO to GitHub if it fits the 2 GiB asset limit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          iso="$(ls out/*.iso)"
+          size="$(stat -c%s "$iso")"
+          if (( size >= 2000 * 1024 * 1024 )); then
+            echo "::warning::ISO $((size / 1024 / 1024)) MiB melebihi batas aset GitHub; ISO hanya tersedia di mirror R2"
+            exit 0
+          fi
+          gh release upload "$TAG" "$iso" --clobber
+
+      - name: Append Cloudflare R2 mirror links to release notes
+        if: needs.mirror.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          MIRROR_BASE: ${{ needs.mirror.outputs.base-url }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" --json body -q .body > notes.md
+          {
+            printf '\n\n### Mirror (Cloudflare R2)\n\n'
+            for f in out/*.iso out/*.iso.sig out/sha256sums.txt \
+              out/sha256sums.txt.sig out/ci-key-fingerprint.txt; do
+              printf -- '- `%s`: %s/releases/%s/%s\n' \
+                "$(basename "$f")" "$MIRROR_BASE" "$TAG" "$(basename "$f")"
+            done
+            printf '\nVerifikasi: `curl -fsSLO %s/releases/%s/sha256sums.txt`' \
+              "$MIRROR_BASE" "$TAG"
+            printf ' lalu `sha256sum -c sha256sums.txt`.\n'
+          } >> notes.md
+          gh release edit "$TAG" --notes-file notes.md

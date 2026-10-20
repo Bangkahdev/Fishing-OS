@@ -59,6 +59,15 @@ jobs:
           echo "iso-version=$ISO_VERSION" >> "$GITHUB_OUTPUT"
           echo "SOURCE_DATE_EPOCH=$SDE, ISO_VERSION=$ISO_VERSION"
 
+      - name: Stamp os-release with ISO version
+        env:
+          FISHING_ISO_VERSION: ${{ steps.version.outputs.iso-version }}
+        run: |
+          sed -i -E \
+            "s/^(VERSION|VERSION_ID|BUILD_ID)=.*/\1=\"${FISHING_ISO_VERSION}\"/" \
+            profile/airootfs/etc/os-release
+          grep -E '^(VERSION|VERSION_ID|BUILD_ID)=' profile/airootfs/etc/os-release
+
       - name: Build ISO
         env:
           SOURCE_DATE_EPOCH: ${{ steps.version.outputs.source-date-epoch }}
