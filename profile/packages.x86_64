@@ -84,6 +84,16 @@ espeak-ng
 espeakup
 alsa-utils
 
+# GUI (XFCE + LightDM)
+xorg-server
+xfce4
+xfce4-goodies
+lightdm
+lightdm-gtk-greeter
+firefox
+fastfetch
+ttf-dejavu
+
 # Firmware & microcode
 amd-ucode
 intel-ucode

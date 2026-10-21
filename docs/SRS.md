@@ -5,7 +5,7 @@
 |  |  |
 | --- | --- |
 | **Dokumen** | SRS-FINAL |
-| **Versi** | 1.6 |
+| **Versi** | 1.7 |
 | **Status** | Final — direvisi 2026-10-21 |
 | **Tanggal** | 2026-10-21 |
 | **Changelog 1.1** | Nama distro: Fishing OS; domain ditandai sebagai keputusan pending |
@@ -14,7 +14,8 @@
 | **Changelog 1.4** | Batas ukuran ISO menjadi ≤ 2000 MiB (batas aset GitHub Releases); DE dan browser ditunda ke fase 2; validasi menu boot ditambah ke lint CI |
 | **Changelog 1.5** | Mirror rilis ke Cloudflare R2 (opsional, `FR-CI-11`) |
 | **Changelog 1.6** | ISO fase 1 dinyatakan live medium konsol (zsh, alat DevOps) — bukan desktop; WKD dicatat via metode direct; smoke test di VM wajib lulus sebelum rilis; backlog fase 2 (DE, installer, CLI `fishing`) dicatat di §7 |
-| **Basis** | archiso (profil `releng`), target x86_64, live medium konsol |
+| **Changelog 1.7** | Desktop **XFCE + LightDM (autologin `liveuser`) dan Firefox** masuk fase 1 (`FR-ISO-07`); logo huruf F dan konfigurasi `fastfetch` ditambahkan; §7 hanya menyisakan installer ke disk dan CLI `fishing` |
+| **Basis** | archiso (profil `releng`), target x86_64, live medium konsol + desktop XFCE |
 
 - Distro: **Fishing OS** (`iso_name=fishing-os`)
 - Domain: **`mdhiyaulatha.me`** (WKD aktif via metode direct `https://mdhiyaulatha.me/.well-known/openpgpkey/hu/<hash>`; subdomain `openpgpkey.mdhiyaulatha.me` belum dikonfigurasi)
@@ -29,8 +30,8 @@ Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk distrib
 
 ## 1.2 Ruang Lingkup
 
-Termasuk: konfigurasi profil archiso, daftar paket, branding, pipeline CI (build–sign–publish), prosedur verifikasi pengguna, manajemen kunci.
-Tidak termasuk pada fase 1: installer ke disk (lihat §7), lingkungan desktop & browser (fase 2, §7), repositori paket kustom, arsitektur non-x86_64.
+Termasuk: konfigurasi profil archiso, daftar paket, branding, desktop XFCE + LightDM, pipeline CI (build–sign–publish), prosedur verifikasi pengguna, manajemen kunci.
+Tidak termasuk pada fase 1: installer ke disk (lihat §7), repositori paket kustom, arsitektur non-x86_64.
 
 ## 1.3 Definisi
 
@@ -45,7 +46,7 @@ Tidak termasuk pada fase 1: installer ke disk (lihat §7), lingkungan desktop & 
 
 ## 2.1 Fungsi Produk
 
-Distribusi live USB/Linux yang dapat di-boot langsung, berbasis konsol (zsh) dengan toolchain DevOps siap pakai, dengan kepercayaan rilis yang dapat diverifikasi secara kriptografis oleh pengguna. Lingkungan desktop ditunda ke fase 2 (§7).
+Distribusi live USB/Linux yang dapat di-boot langsung, berbasis konsol (zsh) dengan toolchain DevOps siap pakai, plus desktop XFCE (LightDM, autologin `liveuser`) dan Firefox, dengan kepercayaan rilis yang dapat diverifikasi secara kriptografis oleh pengguna.
 
 ## 2.2 Kelas Pengguna
 
@@ -69,9 +70,11 @@ Distribusi live USB/Linux yang dapat di-boot langsung, berbasis konsol (zsh) den
 | --- | --- | --- | --- |
 | FR-ISO-01 | Profil dibangun dari `releng` sebagai basis, disalin ke direktori repo `profile/` | Must | Final |
 | FR-ISO-02 | `profiledef.sh` menetapkan `iso_name=fishing-os`, `iso_label=FISHINGOS_YYYYMM`, `iso_publisher` | Must | Final |
-| FR-ISO-03 | Daftar paket diatur di `packages.x86_64`; tambahan wajib: editor, utilitas sistem, toolchain DevOps. Shell default zsh; DE dan browser ditunda ke fase 2 (§7) | Must | Final (revisi 1.6) |
+| FR-ISO-03 | Daftar paket diatur di `packages.x86_64`; tambahan wajib: editor, utilitas sistem, toolchain DevOps. Shell default zsh | Must | Final (revisi 1.6) |
 | FR-ISO-04 | `airootfs/` berisi konfigurasi: hostname `FishingOS`, user live default, service yang di-enable | Must | Final |
 | FR-ISO-05 | Bootloader menampilkan branding Fishing OS (menu GRUB/syslinux) | Should | Final |
+| FR-ISO-07 | Desktop XFCE tersedia dan LightDM masuk otomatis sebagai `liveuser` (sesi `xfce`); Firefox tersedia | Must | Final (revisi 1.7) |
+| FR-ISO-08 | Logo distro (huruf F) tersedia di `/usr/share/pixmaps` dan dipakai fastfetch di `/usr/share/fishing-os/logo.txt` | Should | Final (revisi 1.7) |
 | FR-ISO-06 | Ukuran ISO hasil build ≤ 2000 MiB (batas aset GitHub Releases) | Must | Final (revisi 1.4) |
 
 ## 3.2 Pipeline CI (FR-CI)
@@ -137,7 +140,7 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 | --- | --- | --- |
 | NFR-01 | Waktu build ISO di CI | ≤ 60 menit |
 | NFR-02 | ISO dapat boot di mode UEFI dan Legacy BIOS | 100% rilis wajib lolos |
-| NFR-03 | Boot ke login prompt konsol | ≤ 90 detik di VM (2 vCPU, 4 GiB); waktu boot desktop diukur pada fase 2 |
+| NFR-03 | Boot ke login prompt konsol dan masuk ke sesi XFCE | ≤ 90 detik di VM (2 vCPU, 4 GiB) |
 | NFR-04 | Reproducibility | build ulang dari commit yang sama menghasilkan checksum identik *(stretch goal — tidak menghalangi rilis fase 1)* |
 
 ---
@@ -155,6 +158,8 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 | FR-CI-10.4 | Prosedur verifikasi dijalankan dari mesin bersih (tanpa keyring lama) |
 | FR-CI-12 | Inspeksi aset halaman rilis: ISO, `.sig`, checksum, fingerprint semuanya ada |
 | FR-CI-13 | Log job smoke-test berisi `FISHING-SMOKETEST: PASS` sebelum job sign/release jalan |
+| FR-ISO-07 | Boot ISO di VM (VirtualBox/QEMU) lalu inspeksi proses: `xfwm4`/`xfdesktop` jalan, LightDM autologin `liveuser` |
+| FR-ISO-08 | Cek berkas di profile: `/usr/share/pixmaps/fishing-os.png` dan `/usr/share/fishing-os/logo.txt` ada |
 | NFR-02 | Uji boot UEFI + BIOS di QEMU tiap rilis; label default menu divalidasi statis (`tests/check_bootmenu.sh`) di lint CI |
 
 ---
@@ -168,7 +173,7 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 | D-3 | Basis profil | `releng` (bukan `baseline`) |
 | D-4 | Platform CI | GitHub Actions |
 | D-5 | Domain resmi | `mdhiyaulatha.me` (keputusan: gunakan domain portfolio, WKD aktif) |
-| D-6 | Lingkungan desktop | Ditunda ke fase 2 (§7); ISO fase 1 berbasis konsol |
+| D-6 | Lingkungan desktop | XFCE + LightDM (keputusan fase 1, revisi 1.7); Hyprland tetap opsi fase 2 |
 | D-7 | Penomoran versi | Tag `vYYYY.MM.N` menentukan versi ISO; N = rilis ke-N dalam bulan |
 
 ---
@@ -181,16 +186,16 @@ Proyek ini dikerjakan oleh satu orang; seluruh peran (pembuat produk, rilis mana
 | --- | --- | --- | --- |
 | Pembuat & Rilis Manager | Muhammad Dhiyaul Atha | *Bangkah* | 2026-10-19 |
 | Revisi 1.6 | Muhammad Dhiyaul Atha | *Bangkah* | 2026-10-21 |
+| Revisi 1.7 | Muhammad Dhiyaul Atha | *Bangkah* | 2026-10-21 |
 
 ---
 
 # 7. Backlog Fase 2 (di luar SRS ini)
 
-Item berikut sengaja **tidak** menjadi bagian SRS v1.6; dicatat di sini agar keputusan tidak hilang.
+Item berikut sengaja **tidak** menjadi bagian SRS v1.7; dicatat di sini agar keputusan tidak hilang.
 
-- **Lingkungan desktop** — pilih XFCE atau Hyprland; butuh server tampilan (Xorg/Wayland), display manager, dan konfigurasi autostart.
 - **Installer ke disk** — mis. `archinstall`; butuh jaringan dan perencanaan partisi.
 - **CLI `fishing`** — manajemen alat on-demand; butuh mekanisme instalasi paket (skrip atau repositori kustom).
-- **Browser & aplikasi kantor ringan**.
+- **Hyprland** — alternatif WM jika XFCE dirasa berat; perlu konfigurasi Wayland, autostart, dan permission.
 
 Setiap item wajib direvisi ke SRS terpisah sebelum dikerjakan. Penambahan paket dapat menaikkan ukuran ISO, sehingga batas FR-ISO-06 (2000 MiB) perlu dievaluasi ulang.
