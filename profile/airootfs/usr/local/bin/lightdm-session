@@ -1,0 +1,22 @@
+#!/bin/sh
+# LightDM menjalankan "lightdm-session <perintah sesi>" untuk sesi user.
+# Paket lightdm di Arch tidak menyertakan /usr/bin/lightdm-session, sehingga
+# perintah tersebut tidak ditemukan: sesi XFCE langsung keluar dengan status 1
+# dan LightDM looping ulang ke greeter (lihat /var/log/lightdm/lightdm.log:
+# "Running command lightdm-session startxfce4" lalu "Exited with return value 1").
+#
+# Wrapper ini meneruskan ke /etc/lightdm/Xsession (disediakan paket lightdm)
+# yang menyiapkan environment X (Xresources, xinitrc.d, xmodmap) lalu
+# menjalankan perintah sesi dengan "exec $@".
+set -e
+
+if [ "$#" -eq 0 ]; then
+    echo "lightdm-session: perintah sesi tidak diberikan" >&2
+    exit 1
+fi
+
+if [ -x /etc/lightdm/Xsession ]; then
+    exec /etc/lightdm/Xsession "$@"
+fi
+
+exec "$@"

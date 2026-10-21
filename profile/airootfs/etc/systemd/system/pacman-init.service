@@ -1,13 +1,18 @@
 [Unit]
 Description=Initializes Pacman keyring
 Requires=etc-pacman.d-gnupg.mount
-After=etc-pacman.d-gnupg.mount time-sync.target
+After=etc-pacman.d-gnupg.mount time-sync.target network-online.target
+Wants=network-online.target
 BindsTo=etc-pacman.d-gnupg.mount
 Before=archlinux-keyring-wkd-sync.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+# Batas keras. pacman-key --populate butuh jaringan; tanpa batas waktu
+# ia bisa menggantung >9 menit dan menahan target Multi-User System,
+# sehingga boot (termasuk layar login) ikut tertahan.
+TimeoutStartSec=120
 ExecStart=/usr/bin/pacman-key --init
 ExecStart=/usr/bin/pacman-key --populate
 

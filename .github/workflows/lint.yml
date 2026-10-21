@@ -99,6 +99,13 @@ jobs:
 
       - name: Check CI public key fingerprint
         run: |
+          # Kunci publik tidak wajib ada di repo (tersedia sebagai aset rilis
+          # ci-key.asc). Kalau ada, pastikan fingerprint-nya benar dan tidak
+          # memuat private key.
+          if [[ ! -f ci-key.asc ]]; then
+            echo "[PASS] ci-key.asc tidak ada di repo (dilewati); kunci tersedia di halaman rilis"
+            exit 0
+          fi
           expected="69aa973a33a3930bb1c83850f713bcd7d6e8f591"
           actual="$(gpg --batch --show-keys --with-colons ci-key.asc 2>/dev/null \
             | awk -F: '/^fpr:/ {print tolower($10); exit}')"
@@ -106,6 +113,7 @@ jobs:
             echo "::error::ci-key.asc tidak bisa dibaca atau bukan kunci publik"
             exit 1
           fi
+
           if [[ "$actual" != "$expected" ]]; then
             echo "::error::Fingerprint ci-key.asc ($actual) tidak cocok dengan fingerprint CI key ($expected)"
             exit 1
