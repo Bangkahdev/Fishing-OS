@@ -4,10 +4,14 @@ Alat siap pakai: git, docker, kubectl, helm, terraform, ansible,
 python3, nodejs, go, vim, neovim, tmux, ssh, curl, jq, make, gcc.
 
 Mulai dengan mengetik perintah sesuai kebutuhan, misal:
-  docker --version
+  fishing-check
+  sudo fishing-container up
   kubectl version --client
   terraform --version
   ansible --version
 
 Jaringan Ethernet, WLAN dan WWAN via DHCP bekerja otomatis.
 Untuk Wi-Fi gunakan iwctl.
+
+Catatan: root tanpa password adalah perilaku bawaan live medium.
+Jangan gunakan ISO ini sebagai sistem produksi tanpa mengubah kredensial.

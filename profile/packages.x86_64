@@ -13,10 +13,9 @@ syslinux
 efibootmgr
 systemd
 systemd-resolvconf
-networkmanager
-dhcpcd
 iwd
 wpa_supplicant
+modemmanager
 openssh
 sudo
 polkit
@@ -33,19 +32,11 @@ neovim
 nano
 terminus-font
 
-# Desktop & X11 (DE, browser, editor per SRS FR-ISO-03)
-xfce4
-firefox
-xorg-server
-xorg-xinit
-lightdm
-lightdm-gtk-greeter
-
 # Version control
 git
 github-cli
 
-# Containers & orchestration (intihanya, ukuran besar)
+# Containers & orchestration
 docker
 docker-compose
 kubectl
@@ -53,9 +44,9 @@ helm
 
 # IaC & configuration management
 terraform
-ansible
+ansible-core
 
-# Languages & runtimes (intihanya)
+# Languages & runtimes
 python
 python-pip
 nodejs
@@ -66,7 +57,6 @@ go
 make
 cmake
 gcc
-clang
 gdb
 
 # Networking & debugging utilities
@@ -74,7 +64,6 @@ curl
 wget
 jq
 inetutils
-bind
 net-tools
 iproute2
 tcpdump
@@ -84,18 +73,30 @@ mtr
 traceroute
 
 # Productivity & dev helpers
-shellcheck
 bat
 fd
 ripgrep
 fzf
 htop
 
+# Accessibility (opsi boot "with speech")
+espeak-ng
+espeakup
+alsa-utils
+
+# GUI (XFCE + LightDM)
+xorg-server
+xfce4
+xfce4-goodies
+lightdm
+lightdm-gtk-greeter
+firefox
+fastfetch
+ttf-dejavu
+
 # Firmware & microcode
 amd-ucode
 intel-ucode
-linux-firmware-marvell
-sof-firmware
 wireless-regdb
 wireless_tools
 
@@ -115,6 +116,8 @@ gzip
 bzip2
 xz
 zstd
+memtest86+
+memtest86+-efi
 edk2-shell
 efivar
 dmidecode
