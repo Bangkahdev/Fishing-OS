@@ -2,10 +2,9 @@
 name: Lint Fishing OS
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  # Reusable: dipanggil oleh ci.yml (push/PR ke main) dan release.yml (tag).
+  # Satu-satunya sumber kebenaran lint, jadi tidak ada run ganda.
+  workflow_call:
 
 permissions:
   contents: read
@@ -13,6 +12,7 @@ permissions:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container:
       image: archlinux:latest
     defaults:
@@ -21,10 +21,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install dependencies
-        run: pacman -Syu --noconfirm shellcheck yamllint findutils
+        run: pacman -Syu --noconfirm shellcheck yamllint findutils gnupg
 
       - name: Shellcheck
         run: |
@@ -48,7 +48,7 @@ jobs:
           echo "[PASS] Semua entri .wants adalah symlink"
 
       - name: Yamllint
-        run: yamllint -c .yamllint .github/workflows/
+        run: yamllint -c .yamllint .github/
 
       - name: Check for zero-byte files
         run: |
@@ -84,3 +84,34 @@ jobs:
             exit 1
           fi
           echo "[PASS] Semua paket ada di repositori Arch"
+
+      - name: Actionlint (validasi schema workflow)
+        run: |
+          set -euo pipefail
+          version="1.7.12"
+          url="https://github.com/rhysd/actionlint/releases/download/v${version}/actionlint_${version}_linux_amd64.tar.gz"
+          expected="8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+          curl -fsSL -o actionlint.tgz "$url"
+          echo "${expected}  actionlint.tgz" | sha256sum -c -
+          tar xzf actionlint.tgz actionlint
+          ./actionlint -color .github/workflows/*.yml
+          echo "[PASS] actionlint: tidak ada temuan"
+
+      - name: Check CI public key fingerprint
+        run: |
+          expected="69aa973a33a3930bb1c83850f713bcd7d6e8f591"
+          actual="$(gpg --batch --show-keys --with-colons ci-key.asc 2>/dev/null \
+            | awk -F: '/^fpr:/ {print tolower($10); exit}')"
+          if [[ -z "$actual" ]]; then
+            echo "::error::ci-key.asc tidak bisa dibaca atau bukan kunci publik"
+            exit 1
+          fi
+          if [[ "$actual" != "$expected" ]]; then
+            echo "::error::Fingerprint ci-key.asc ($actual) tidak cocok dengan fingerprint CI key ($expected)"
+            exit 1
+          fi
+          if grep -q 'PRIVATE KEY' ci-key.asc; then
+            echo "::error::ci-key.asc memuat private key; jangan pernah commit private key"
+            exit 1
+          fi
+          echo "[PASS] Fingerprint ci-key.asc cocok ($actual)"

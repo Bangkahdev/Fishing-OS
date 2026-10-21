@@ -1,0 +1,15 @@
+---
+version: 2
+updates:
+  # Semua action di-pin ke commit SHA (lihat komentar versi di tiap workflow).
+  # Dependabot yang menjaga SHA itu tetap segar; review diff-nya sebelum merge.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: 'ci'
+    groups:
+      github-actions:
+        patterns:
+          - '*'

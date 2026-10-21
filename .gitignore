@@ -6,3 +6,7 @@ out/
 qemu-serial.log
 qemu-stderr.log
 test-output.log
+
+# Skill agent yang di-sinkronkan ke folder kerja (bukan bagian dari distro)
+.agents/
+skills-lock.json

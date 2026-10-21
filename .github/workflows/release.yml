@@ -9,14 +9,19 @@ permissions:
   contents: read
 
 jobs:
+  # Gate: rilis hanya boleh lanjut bila lint hijau.
+  lint:
+    uses: ./.github/workflows/lint.yml
+
   build:
     uses: ./.github/workflows/build.yml
     with:
       retention-days: 90
 
   sign:
-    needs: build
+    needs: [lint, build]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: archlinux:latest
     environment: release
@@ -26,7 +31,7 @@ jobs:
 
     steps:
       - name: Download ISO artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: fishing-os-iso
           path: out/
@@ -41,7 +46,23 @@ jobs:
           EXPECTED_FPR: ${{ vars.GPG_FINGERPRINT }}
         run: |
           set -euo pipefail
-          GPG_USER="bangkah@mdhiyaulatha.me"
+          GPG_USER="bangkan@mdhiyaulatha.me"
+
+          # Fail-closed: prasyarat identitas kunci WAJIB terpenuhi. Tanpa ini,
+          # tanda tangan tidak menambah kepercayaan apa pun (docs/SRS.md §3.3).
+          if [[ -z "${EXPECTED_FPR:-}" ]]; then
+            echo "::error::vars.GPG_FINGERPRINT kosong, verifikasi fingerprint dilewati. Kunci apa pun yang tersimpan di GPG_PRIVATE_KEY bisa menandatangani rilis. Tetapkan repository variable GPG_FINGERPRINT terlebih dahulu."
+            exit 1
+          fi
+          if [[ -z "${GPG_PASSPHRASE:-}" ]]; then
+            echo "::error::secret GPG_PASSPHRASE kosong; kunci privat ditandatangani tanpa frasa sandi."
+            exit 1
+          fi
+          if [[ -z "${GPG_PRIVATE_KEY:-}" ]]; then
+            echo "::error::secret GPG_PRIVATE_KEY kosong."
+            exit 1
+          fi
+
           GNUPGHOME="$(mktemp -d)"
           export GNUPGHOME
           chmod 700 "$GNUPGHOME"
@@ -53,12 +74,55 @@ jobs:
           printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --pinentry-mode loopback \
             --passphrase-file "$PASSFILE" --import
 
-          FPR="$(gpg --batch --with-colons --fingerprint "$GPG_USER" | awk -F: '/^fpr:/ {print $10; exit}')"
-          echo "Fingerprint kunci: $FPR"
-          if [[ -n "${EXPECTED_FPR:-}" && "$FPR" != "$EXPECTED_FPR" ]]; then
-            echo "::error::Fingerprint kunci ($FPR) tidak sama dengan vars.GPG_FINGERPRINT"
+          # Cari kunci yang uid-nya cocok dengan GPG_USER. PENTING: gpg dengan
+          # selector string uid bisa mengembalikan kosong secara acak
+          # ("nothing exported" / "No public key"), jadi keyring di-enumerate
+          # penuh lalu dicocokkan sendiri, dan selector berikutnya memakai
+          # fingerprint (yang stabil).
+          find_fpr_by_uid() {
+            gpg --batch --with-colons --list-keys 2>/dev/null | awk -F: -v want="$GPG_USER" '
+              /^pub:/ { fpr = "" }
+              /^fpr:/ && fpr == "" { fpr = $10 }
+              /^uid:/ { if (fpr != "" && index($10, want) > 0) { print fpr; exit } }
+            '
+          }
+
+          FPR=""
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            FPR="$(find_fpr_by_uid)"
+            if [[ -n "$FPR" ]]; then
+              break
+            fi
+            sleep 1
+          done
+
+          # Normalisasi: gpg menampilkan fingerprint dengan spasi, sedangkan
+          # repository variable bisa ditulis dengan atau tanpa spasi.
+          FPR_NORM="$(printf '%s' "$FPR" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+          EXPECTED_NORM="$(printf '%s' "$EXPECTED_FPR" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+          if [[ -z "$FPR_NORM" ]]; then
+            echo "::error::Kunci untuk $GPG_USER tidak ditemukan di GPG_PRIVATE_KEY."
             exit 1
           fi
+          if [[ "$FPR_NORM" != "$EXPECTED_NORM" ]]; then
+            echo "::error::Fingerprint kunci ($FPR) tidak sama dengan vars.GPG_FINGERPRINT ($EXPECTED_FPR)"
+            exit 1
+          fi
+          echo "Fingerprint kunci terverifikasi: $FPR"
+
+          # Kunci harus benar-benar bisa dipakai menandatangani.
+          if ! gpg --batch --with-colons --list-secret-keys "$FPR" 2>/dev/null | grep -q '^sec:'; then
+            echo "::error::Kunci privat untuk $GPG_USER tidak ditemukan di GPG_PRIVATE_KEY."
+            exit 1
+          fi
+          KEY_STATUS="$(gpg --batch --with-colons --list-keys "$FPR" 2>/dev/null | awk -F: '/^pub:/ {print $2; exit}')"
+          case "$KEY_STATUS" in
+            r|e|d)
+              echo "::error::Status kunci=$KEY_STATUS (revoked/expired/disabled); penandatanganan dibatalkan."
+              exit 1
+              ;;
+          esac
+
 
           cd out
           shopt -s nullglob
@@ -78,8 +142,24 @@ jobs:
           gpg --armor --fingerprint "$GPG_USER" > ci-key-fingerprint.txt
           cat ci-key-fingerprint.txt
 
+          # Publikasikan kunci publik bersama rilis. Tanpa berkas ini user
+          # tidak bisa memverifikasi tanda tangan: gpg butuh public key, dan
+          # WKD untuk domain ini belum dikonfigurasi. Ekspor WAJIB memakai
+          # fingerprint, bukan string uid (selector uid bisa "nothing exported").
+          gpg --batch --armor --export "$FPR" > ci-key.asc
+          if ! grep -q 'BEGIN PGP PUBLIC KEY' ci-key.asc; then
+            echo "::error::Ekspor kunci publik gagal: ci-key.asc tidak berisi kunci publik."
+            exit 1
+          fi
+          EXPORTED_FPR="$(gpg --batch --show-keys --with-colons ci-key.asc 2>/dev/null | awk -F: '/^fpr:/ {print $10; exit}')"
+          if [[ "$(printf '%s' "$EXPORTED_FPR" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')" != "$FPR_NORM" ]]; then
+            echo "::error::Kunci publik yang dipublikasikan ($EXPORTED_FPR) tidak cocok dengan $FPR."
+            exit 1
+          fi
+          echo "Kunci publik dipublikasikan: $EXPORTED_FPR ($(stat -c%s ci-key.asc) byte)"
+
       - name: Upload signed artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: fishing-os-release-signed
           path: |
@@ -88,6 +168,7 @@ jobs:
             out/sha256sums.txt
             out/sha256sums.txt.sig
             out/ci-key-fingerprint.txt
+            out/ci-key.asc
           retention-days: 90
           compression-level: 0
           if-no-files-found: error
@@ -95,11 +176,13 @@ jobs:
   mirror:
     needs: sign
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Mirror tidak boleh menghalangi rilis GitHub; kegagalan hanya peringatan.
     continue-on-error: true
     container:
       image: archlinux:latest
-    environment: release
+    # Tanpa `environment: release`: job ini tidak menyentuh private key, jadi
+    # tidak perlu jadi titik persetujuan kedua. Secret R2 dibaca dari scope repo.
     defaults:
       run:
         shell: bash
@@ -110,7 +193,7 @@ jobs:
 
     steps:
       - name: Download signed artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: fishing-os-release-signed
           path: out/
@@ -165,6 +248,7 @@ jobs:
             --include "*.sig" \
             --include "sha256sums.txt" \
             --include "ci-key-fingerprint.txt" \
+            --include "ci-key.asc" \
             --header-upload "Cache-Control: public, max-age=31536000, immutable"; then
             echo "::warning::Gagal mengunggah artefak ke Cloudflare R2; rilis tetap diterbitkan di GitHub"
             echo "uploaded=false" >> "$GITHUB_OUTPUT"
@@ -174,7 +258,7 @@ jobs:
           {
             echo "base_url=${base}"
             for f in out/*.iso out/*.iso.sig out/sha256sums.txt \
-              out/sha256sums.txt.sig out/ci-key-fingerprint.txt; do
+              out/sha256sums.txt.sig out/ci-key-fingerprint.txt out/ci-key.asc; do
               printf '%s  %s/%s\n' "$(basename "$f")" "${base}" "$(basename "$f")"
             done
           } > out/mirrors.txt
@@ -192,12 +276,13 @@ jobs:
   release:
     needs: [sign, mirror]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
 
     steps:
       - name: Download signed artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: fishing-os-release-signed
           path: out/
@@ -205,13 +290,14 @@ jobs:
       - name: Create release
         id: create
         continue-on-error: true
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: |
             out/*.iso.sig
             out/sha256sums.txt
             out/sha256sums.txt.sig
             out/ci-key-fingerprint.txt
+            out/ci-key.asc
           generate_release_notes: true
           draft: false
           prerelease: false
@@ -227,9 +313,17 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          iso="$(ls out/*.iso)"
+          shopt -s nullglob
+          isos=(out/*.iso)
+          if [[ ${#isos[@]} -ne 1 ]]; then
+            echo "::error::Diharapkan tepat 1 ISO, ditemukan ${#isos[@]}"
+            exit 1
+          fi
+          iso="${isos[0]}"
           size="$(stat -c%s "$iso")"
-          if (( size >= 2000 * 1024 * 1024 )); then
+          # Batas identik dengan build.yml: ISO tepat 2000 MiB tetap boleh
+          # diunggah, sehingga checksum dan .sig tidak pernah menggantung.
+          if (( size > 2000 * 1024 * 1024 )); then
             echo "::warning::ISO $((size / 1024 / 1024)) MiB melebihi batas aset GitHub; ISO hanya tersedia di mirror R2"
             exit 0
           fi
@@ -249,15 +343,17 @@ jobs:
           set -euo pipefail
           gh release view "$TAG" --json body -q .body > notes.md
           {
-            printf '\n\n### Mirror (Cloudflare R2)\n\n'
+            printf "\n\n### Mirror (Cloudflare R2)\n\n"
             for f in out/*.iso out/*.iso.sig out/sha256sums.txt \
-              out/sha256sums.txt.sig out/ci-key-fingerprint.txt; do
-              printf -- '- `%s`: %s/releases/%s/%s\n' \
+              out/sha256sums.txt.sig out/ci-key-fingerprint.txt out/ci-key.asc; do
+              printf -- "- \`%s\`: %s/releases/%s/%s\n" \
                 "$(basename "$f")" "$MIRROR_BASE" "$TAG" "$(basename "$f")"
             done
-            printf '\nVerifikasi: `curl -fsSLO %s/releases/%s/sha256sums.txt`' \
+            printf "\nVerifikasi: \`curl -fsSLO %s/releases/%s/sha256sums.txt\`" \
               "$MIRROR_BASE" "$TAG"
-            printf ' lalu `sha256sum -c sha256sums.txt`.\n'
+            printf " lalu \`sha256sum -c sha256sums.txt\`.\n"
+            printf "\nVerifikasi tanda tangan: unduh \`ci-key.asc\`, \`gpg --import ci-key.asc\`,\n"
+            printf "lalu \`gpg --verify nama.iso.sig nama.iso\`.\n"
           } >> notes.md
           gh release edit "$TAG" --notes-file notes.md
 
@@ -283,4 +379,3 @@ jobs:
           fi
           echo "::error::GitHub gagal dan mirror R2 tidak tersedia; rilis tidak terpublikasi."
           exit 1
-
