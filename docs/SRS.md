@@ -5,7 +5,7 @@
 |  |  |
 | --- | --- |
 | **Dokumen** | SRS-FINAL |
-| **Versi** | 1.7 |
+| **Versi** | 1.10 |
 | **Status** | Final — direvisi 2026-10-21 |
 | **Tanggal** | 2026-10-21 |
 | **Changelog 1.1** | Nama distro: Fishing OS; domain ditandai sebagai keputusan pending |
@@ -15,10 +15,13 @@
 | **Changelog 1.5** | Mirror rilis ke Cloudflare R2 (opsional, `FR-CI-11`) |
 | **Changelog 1.6** | ISO fase 1 dinyatakan live medium konsol (zsh, alat DevOps) — bukan desktop; WKD dicatat via metode direct; smoke test di VM wajib lulus sebelum rilis; backlog fase 2 (DE, installer, CLI `fishing`) dicatat di §7 |
 | **Changelog 1.7** | Desktop **XFCE + LightDM (autologin `liveuser`) dan Firefox** masuk fase 1 (`FR-ISO-07`); logo huruf F dan konfigurasi `fastfetch` ditambahkan; §7 hanya menyisakan installer ke disk dan CLI `fishing` |
+| **Changelog 1.8** | Rantai kepercayaan diperketat: verifikasi fingerprint GPG jadi *fail-closed* (`FR-CI-14`), job `lint` jadi dependensi `sign` dan `build` (`FR-CI-15`), kunci publik dipublikasikan sebagai `ci-key.asc` (`FR-CI-16`); WKD dinyatakan **belum aktif** (subdomain tanpa DNS, path direct dilayani catch-all situs) dan prosedur verifikasi diubah ke impor `ci-key.asc` |
+| **Changelog 1.9** | Kunci publik disimpan juga di repo sebagai `ci-key.asc` dengan drift guard di lint CI; jebakan selector uid GnuPG didokumentasikan (§3.3 §1b) dan seluruh query kunci di workflow dialihkan ke selector fingerprint; klaim "tidak ada salinan lain" dikoreksi (§3.3 §1.3) |
+| **Changelog 1.10** | Seluruh action GitHub di-pin ke commit SHA (bukan tag mayor) dan dinaikkan ke rilis berbasis Node 24: `checkout` v7.0.1, `upload-artifact` v7.0.2, `download-artifact` v8.0.2, `github-script` v9.0.0, `action-gh-release` v2.6.2; Dependabot ditambahkan untuk menjaga pin tetap segar; validasi schema `actionlint` (versi + checksum di-pin) ditambahkan ke lint CI; `FUNDING.yml` diperbaiki agar lolos yamllint |
 | **Basis** | archiso (profil `releng`), target x86_64, live medium konsol + desktop XFCE |
 
 - Distro: **Fishing OS** (`iso_name=fishing-os`)
-- Domain: **`mdhiyaulatha.me`** (WKD aktif via metode direct `https://mdhiyaulatha.me/.well-known/openpgpkey/hu/<hash>`; subdomain `openpgpkey.mdhiyaulatha.me` belum dikonfigurasi)
+- Domain: **`mdhiyaulatha.me`** (WKD **belum aktif** — subdomain `openpgpkey.mdhiyaulatha.me` tanpa record DNS dan path direct dilayani catch-all halaman situs; kanal fingerprint yang berfungsi adalah halaman rilis, lihat §3.3)
 
 ---
 
@@ -94,6 +97,10 @@ Distribusi live USB/Linux yang dapat di-boot langsung, berbasis konsol (zsh) den
 | FR-CI-11 | Mirror artefak rilis ke Cloudflare R2 bila secrets R2 tersedia; tautan mirror ditambahkan ke catatan rilis | Should | Final (revisi 1.5) |
 | FR-CI-12 | Setiap halaman rilis wajib memuat `*.iso`, `*.iso.sig`, `sha256sums.txt`, `sha256sums.txt.sig`, dan `ci-key-fingerprint.txt` | Must | Final (revisi 1.6) |
 | FR-CI-13 | Rilis hanya diterbitkan setelah smoke test boot di VM lulus (`FISHING-SMOKETEST: PASS`) | Must | Final (revisi 1.6) |
+| FR-CI-14 | Rilis ditolak bila `vars.GPG_FINGERPRINT` kosong atau tidak cocok dengan fingerprint kunci yang diimpor (*fail-closed*) | Must | Final (revisi 1.8) |
+| FR-CI-15 | Job `lint` menjadi dependensi job `sign` dan `build`; rilis/build tidak berjalan bila lint gagal | Must | Final (revisi 1.8) |
+| FR-CI-16 | Setiap halaman rilis menyertakan kunci publik `ci-key.asc` agar pengguna dapat memverifikasi tanda tangan tanpa WKD | Must | Final (revisi 1.8) |
+| FR-CI-17 | Seluruh action GitHub di-pin ke commit SHA dan Dependabot menjaga pin tetap segar | Must | Final (revisi 1.10) |
 
 ## 3.3 Penandatanganan GPG & Publikasi ISO — FR-CI-10 (Final)
 
@@ -102,29 +109,45 @@ Distribusi live USB/Linux yang dapat di-boot langsung, berbasis konsol (zsh) den
 Private key **tidak pernah** disimpan di repositori git dalam bentuk apa pun. Kunci rilis ada tepat di dua tempat:
 
 1. **Cold key** — YubiKey/smartcard, passphrase ≥20 karakter, hanya dipegang rilis manager; dipakai untuk penandatanganan manual jika pipeline CI jebol.
-2. **CI key** — kunci khusus rilis, hanya ada sebagai GitHub Secrets `GPG_PRIVATE_KEY` + `GPG_PASSPHRASE`. Tidak ada salinan lain di mesin mana pun.
+2. **CI key** — kunci khusus rilis, hanya ada sebagai GitHub Secrets `GPG_PRIVATE_KEY` + `GPG_PASSPHRASE`.
+3. **Salinan lokal CI key** — kunci publik (beserta salinan privat) CI key juga ada di keyring GPG mesin pengembangan rilis manager (`69AA973A33A3930BB1C83850F713BCD7D6E8F591`). Salinan ini tidak pernah masuk repo, dan dipakai untuk menguji prosedur verifikasi sebelum rilis. Klaim "tidak ada salinan lain" hanya berlaku untuk repo dan runner CI.
+
+### 1b. Jebakan GnuPG yang sudah teridentifikasi
+
+`gpg` dengan **selector string uid** (mis. `--export bangkah@mdhiyaulatha.me`)
+dapat mengembalikan hasil kosong secara acak — "nothing exported" atau
+"No public key" — padahal kuncinya ada. Gejalanya: berkas hasil ekspor
+0 byte tanpa error keras. Karena itu seluruh query kunci di workflow memakai
+**selector fingerprint** (yang stabil), dan setiap ekspor kunci publik
+divalidasi ulang: harus berisi `BEGIN PGP PUBLIC KEY`, tidak boleh memuat
+private key, dan fingerprint di dalamnya harus sama dengan fingerprint kunci
+yang sudah diverifikasi.
 
 ### 2. Alur Rilis (Workflow CI)
 
 1. CI build ISO via `mkarchiso`.
 2. CI menghasilkan `sha256sums.txt`.
 3. CI mengimpor CI key dari secrets, lalu *detach-sign* ISO dan checksum.
-4. CI mengunggah `*.iso`, `*.iso.sig`, `sha256sums.txt`, `sha256sums.txt.sig`, dan fingerprint plain-text ke halaman rilis.
+4. CI memverifikasi fingerprint kunci yang diimpor terhadap `vars.GPG_FINGERPRINT` — **fail-closed**: variabel kosong atau tidak cocok membatalkan rilis (`FR-CI-14`).
+5. CI mengunggah `*.iso`, `*.iso.sig`, `sha256sums.txt`, `sha256sums.txt.sig`, `ci-key-fingerprint.txt`, dan `ci-key.asc` ke halaman rilis.
 
-### 3. Kanal Publikasi Fingerprint (dua kanal independen)
+### 3. Kanal Publikasi Fingerprint & Kunci Publik
 
-- **WKD**: metode direct di `https://mdhiyaulatha.me/.well-known/openpgpkey/hu/<hash>` (hash = z-base-32 dari SHA-1 local-part) — memungkinkan `gpg --locate-keys bangkah@mdhiyaulatha.me`. Subdomain `openpgpkey.mdhiyaulatha.me` (metode advanced) belum dikonfigurasi.
+- **Halaman rilis** (kanal utama): fingerprint plain-text di `ci-key-fingerprint.txt` dan kunci publik di `ci-key.asc`. Ini satu-satunya kanal yang diverifikasi berfungsi.
+- **Repo ini**: berkas [`ci-key.asc`](../ci-key.asc) berisi kunci publik yang sama. Lint CI memverifikasi fingerprintnya setiap build, sehingga drift antara repo dan kunci yang menandatangani rilis langsung ketahuan.
 - **Situs resmi**: halaman `/verifikasi` berisi fingerprint dan prosedur verifikasi.
+- **WKD**: *belum aktif*. Subdomain `openpgpkey.mdhiyaulatha.me` tidak punya record DNS, dan path direct di apex `https://mdhiyaulatha.me/.well-known/openpgpkey/hu/<hash>` dilayani catch-all halaman situs (bukan berkas kunci), sehingga `gpg --auto-key-locate wkd --locate-keys bangkan@mdhiyaulatha.me` gagal dengan `No fingerprint`. Untuk spesifikasi WKD yang benar, hash adalah **hex SHA-1** dari local-part (bukan z-base-32), dengan path `hu/<2 hex pertama>/<38 hex sisanya>`.
 
 ### 4. Verifikasi oleh Pengguna
 
 ```bash
-gpg --locate-keys bangkah@mdhiyaulatha.me
-gpg --fingerprint bangkah@mdhiyaulatha.me   # cocokkan dengan situs resmi
-gpg --verify nama.iso.sig nama.iso # harus: Good signature
+gpg --import ci-key.asc                    # kunci publik dari aset rilis
+gpg --fingerprint bangkah@mdhiyaulatha.me  # cocokkan dengan fingerprint di halaman rilis
+gpg --verify nama.iso.sig nama.iso         # harus: Good signature
 ```
 
 Pesan `not certified with a trusted signature` dianggap normal; trust berasal dari pencocokan fingerprint lewat kanal independen.
+
 
 ### 5. Rotasi & Pencabutan
 
@@ -154,7 +177,7 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 | FR-CI-01..05 | Uji pipeline: push dummy, inspeksi log (tidak ada secret bocor) |
 | FR-CI-10.1 | Audit repo: `git log -p` bebas kunci; audit Secrets (hanya org admin) |
 | FR-CI-10.2 | Rilis uji di repo sandbox, verifikasi artefak lengkap |
-| FR-CI-10.3 | WKD: `gpg --auto-key-locate wkd --locate-keys bangkah@mdhiyaulatha.me` dari mesin bersih harus berhasil |
+| FR-CI-10.3 | Kunci publik `ci-key.asc` dari halaman rilis diimpor di mesin bersih, lalu `gpg --verify` menghasilkan `Good signature` (WKD ditunda sampai subdomain dikonfigurasi) |
 | FR-CI-10.4 | Prosedur verifikasi dijalankan dari mesin bersih (tanpa keyring lama) |
 | FR-CI-12 | Inspeksi aset halaman rilis: ISO, `.sig`, checksum, fingerprint semuanya ada |
 | FR-CI-13 | Log job smoke-test berisi `FISHING-SMOKETEST: PASS` sebelum job sign/release jalan |
@@ -172,7 +195,7 @@ Pesan `not certified with a trusted signature` dianggap normal; trust berasal da
 | D-2 | Kanal fingerprint | WKD + halaman `/verifikasi` di situs resmi |
 | D-3 | Basis profil | `releng` (bukan `baseline`) |
 | D-4 | Platform CI | GitHub Actions |
-| D-5 | Domain resmi | `mdhiyaulatha.me` (keputusan: gunakan domain portfolio, WKD aktif) |
+| D-5 | Domain resmi | `mdhiyaulatha.me` (keputusan: gunakan domain portfolio; WKD **belum aktif** — kanal fingerprint yang berfungsi saat ini adalah halaman rilis) |
 | D-6 | Lingkungan desktop | XFCE + LightDM (keputusan fase 1, revisi 1.7); Hyprland tetap opsi fase 2 |
 | D-7 | Penomoran versi | Tag `vYYYY.MM.N` menentukan versi ISO; N = rilis ke-N dalam bulan |
 

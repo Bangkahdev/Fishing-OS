@@ -43,6 +43,7 @@ Setiap rilis berisi:
 | `sha256sums.txt` | Checksum SHA-256 |
 | `sha256sums.txt.sig` | Tanda tangan GPG untuk checksum |
 | `ci-key-fingerprint.txt` | Fingerprint kunci penandatangan |
+| `ci-key.asc` | Kunci publik penandatangan (armored) |
 
 `VERSI` mengikuti tag rilis `vAAAA.BB.N` (misalnya tag `v2026.10.3` menghasilkan
 `fishing-os-2026.10.3-x86_64.iso`). Jika rilis menyertakan tautan mirror
@@ -53,7 +54,10 @@ Setiap rilis berisi:
 ## Verifikasi unduhan
 
 **Selalu verifikasi ISO sebelum dipakai.** Rilis ditandatangani oleh kunci CI
-Fishing OS. Kunci publiknya diambil lewat WKD dari domain `mdhiyaulatha.me`.
+Fishing OS. Kunci publiknya tersedia di dua tempat: aset `ci-key.asc` pada
+halaman rilis, dan berkas [`ci-key.asc`](ci-key.asc) di repo ini. (WKD untuk
+domain `mdhiyaulatha.me` belum dikonfigurasi, jadi `gpg --locate-keys` tidak
+bisa dipakai.)
 
 | | |
 |---|---|
@@ -66,8 +70,8 @@ Di Linux, macOS, atau WSL (ganti `VERSI` dengan versi yang kamu unduh):
 ```bash
 VERSI=2026.10.3
 
-# 1. Ambil kunci publik lewat WKD
-gpg --auto-key-locate clear,wkd --locate-keys bangkah@mdhiyaulatha.me
+# 1. Impor kunci publik (dari aset rilis, atau dari repo ini)
+gpg --import ci-key.asc
 
 # 2. Cocokkan fingerprint dengan tabel di atas
 gpg --fingerprint bangkah@mdhiyaulatha.me

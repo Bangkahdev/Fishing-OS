@@ -15,7 +15,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Gate: build ISO hanya berjalan bila lint hijau.
+  lint:
+    uses: ./.github/workflows/lint.yml
+
   build:
+    needs: lint
     uses: ./.github/workflows/build.yml
     with:
       retention-days: 14
