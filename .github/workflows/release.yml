@@ -203,6 +203,8 @@ jobs:
           path: out/
 
       - name: Create release
+        id: create
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
           files: |
@@ -217,6 +219,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload ISO to GitHub if it fits the 2 GiB asset limit
+        id: upload_iso
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -232,7 +236,10 @@ jobs:
           gh release upload "$TAG" "$iso" --clobber
 
       - name: Append Cloudflare R2 mirror links to release notes
-        if: needs.mirror.outputs.enabled == 'true' && needs.mirror.outputs.uploaded == 'true'
+        if: >-
+          needs.mirror.outputs.enabled == 'true' &&
+          needs.mirror.outputs.uploaded == 'true' &&
+          steps.create.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -253,3 +260,27 @@ jobs:
             printf ' lalu `sha256sum -c sha256sums.txt`.\n'
           } >> notes.md
           gh release edit "$TAG" --notes-file notes.md
+
+      - name: Laporkan hasil rilis
+        if: always()
+        env:
+          TAG: ${{ github.ref_name }}
+          MIRROR_ENABLED: ${{ needs.mirror.outputs.enabled }}
+          MIRROR_UPLOADED: ${{ needs.mirror.outputs.uploaded }}
+          MIRROR_BASE: ${{ needs.mirror.outputs.base-url }}
+        run: |
+          set -uo pipefail
+          echo "GitHub create release: ${{ steps.create.outcome }}"
+          echo "GitHub upload ISO: ${{ steps.upload_iso.outcome }}"
+          echo "Mirror R2: enabled=${MIRROR_ENABLED} uploaded=${MIRROR_UPLOADED}"
+          if [[ "${{ steps.create.outcome }}" == "success" && "${{ steps.upload_iso.outcome }}" == "success" ]]; then
+            echo "Rilis terpublikasi di GitHub."
+            exit 0
+          fi
+          if [[ "${MIRROR_ENABLED}" == "true" && "${MIRROR_UPLOADED}" == "true" ]]; then
+            echo "::warning::GitHub gagal; ISO tersedia di mirror R2: ${MIRROR_BASE}/releases/${TAG}/"
+            exit 0
+          fi
+          echo "::error::GitHub gagal dan mirror R2 tidak tersedia; rilis tidak terpublikasi."
+          exit 1
+
