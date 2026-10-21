@@ -46,7 +46,7 @@ jobs:
           EXPECTED_FPR: ${{ vars.GPG_FINGERPRINT }}
         run: |
           set -euo pipefail
-          GPG_USER="bangkan@mdhiyaulatha.me"
+          GPG_USER="bangkah@mdhiyaulatha.me"
 
           # Fail-closed: prasyarat identitas kunci WAJIB terpenuhi. Tanpa ini,
           # tanda tangan tidak menambah kepercayaan apa pun (docs/SRS.md §3.3).
