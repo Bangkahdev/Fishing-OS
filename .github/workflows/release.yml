@@ -95,6 +95,8 @@ jobs:
   mirror:
     needs: sign
     runs-on: ubuntu-latest
+    # Mirror tidak boleh menghalangi rilis GitHub; kegagalan hanya peringatan.
+    continue-on-error: true
     container:
       image: archlinux:latest
     environment: release
@@ -103,6 +105,7 @@ jobs:
         shell: bash
     outputs:
       enabled: ${{ steps.cfg.outputs.enabled }}
+      uploaded: ${{ steps.upload.outputs.uploaded }}
       base-url: ${{ steps.cfg.outputs.base-url }}
 
     steps:
@@ -136,6 +139,7 @@ jobs:
         run: pacman -Syu --noconfirm rclone
 
       - name: Upload release files and mirror manifest to Cloudflare R2
+        id: upload
         if: steps.cfg.outputs.enabled == 'true'
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
@@ -147,7 +151,7 @@ jobs:
           # Token Object Read & Write tidak bisa melihat daftar bucket.
           RCLONE_CONFIG_R2_NO_CHECK_BUCKET: 'true'
         run: |
-          set -euo pipefail
+          set -uo pipefail
           export RCLONE_CONFIG_R2_TYPE=s3
           export RCLONE_CONFIG_R2_PROVIDER=Cloudflare
           export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
@@ -156,12 +160,16 @@ jobs:
 
           dest="r2:${R2_BUCKET}/releases/${TAG}"
           base="${R2_PUBLIC_BASE_URL}/releases/${TAG}"
-          rclone copy out/ "${dest}/" \
+          if ! rclone copy out/ "${dest}/" \
             --include "fishing-os-*.iso" \
             --include "*.sig" \
             --include "sha256sums.txt" \
             --include "ci-key-fingerprint.txt" \
-            --header-upload "Cache-Control: public, max-age=31536000, immutable"
+            --header-upload "Cache-Control: public, max-age=31536000, immutable"; then
+            echo "::warning::Gagal mengunggah artefak ke Cloudflare R2; rilis tetap diterbitkan di GitHub"
+            echo "uploaded=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           {
             echo "base_url=${base}"
@@ -170,10 +178,15 @@ jobs:
               printf '%s  %s/%s\n' "$(basename "$f")" "${base}" "$(basename "$f")"
             done
           } > out/mirrors.txt
-          rclone copyto out/mirrors.txt "${dest}/mirrors.txt" \
-            --header-upload "Cache-Control: public, max-age=300"
+          if ! rclone copyto out/mirrors.txt "${dest}/mirrors.txt" \
+            --header-upload "Cache-Control: public, max-age=300"; then
+            echo "::warning::Manifest mirror gagal; tautan mirror tidak ditambahkan"
+            echo "uploaded=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           rclone ls "${dest}" | sort
+          echo "uploaded=true" >> "$GITHUB_OUTPUT"
           cat out/mirrors.txt
 
   release:
@@ -219,7 +232,7 @@ jobs:
           gh release upload "$TAG" "$iso" --clobber
 
       - name: Append Cloudflare R2 mirror links to release notes
-        if: needs.mirror.outputs.enabled == 'true'
+        if: needs.mirror.outputs.enabled == 'true' && needs.mirror.outputs.uploaded == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
