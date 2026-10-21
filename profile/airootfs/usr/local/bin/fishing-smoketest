@@ -51,22 +51,24 @@ if grep -q 'fishing.test.desktop=1' /proc/cmdline 2>/dev/null; then
     echo "$P --- lightdm: status ---"
     systemctl is-enabled lightdm 2>&1 | sed "s|^|$P |"
     systemctl is-active lightdm 2>&1 | sed "s|^|$P |"
-    echo "$P --- lightdm: journal ---"
-    journalctl -u lightdm --no-pager -n 200 2>&1 | tail -120 | sed "s|^|$P |"
     echo "$P --- sesi login ---"
     loginctl list-sessions --no-legend 2>&1 | sed "s|^|$P |"
     echo "$P --- home liveuser ---"
     ls -ld /home/liveuser 2>&1 | sed "s|^|$P |"
-    ls -A /home/liveuser 2>&1 | tr '\n' ' ' | sed "s|^|$P |"
-    echo ""
     echo "$P --- grup liveuser (harus ada 'autologin') ---"
     id liveuser 2>&1 | sed "s|^|$P |"
     echo "$P --- proses X ---"
     pgrep -a -f 'xfce4-session|Xorg|lightdm-gtk' 2>&1 | head -8 | sed "s|^|$P |"
     echo "$P --- .xsession-errors ---"
     head -20 /home/liveuser/.xsession-errors 2>&1 | sed "s|^|$P |"
-    echo "$P --- journal user liveuser ---"
-    journalctl _UID=1000 --no-pager -n 20 2>&1 | tail -18 | sed "s|^|$P |"
+    # Diagnostik bila sesi gagal: log lightdm & journal user
+    if ! pgrep -x xfce4-session >/dev/null 2>&1; then
+        echo "$P --- lightdm.log (diagnostik) ---"
+        grep -E "Running command|Exited with return value|Writing X server authority" \
+            /var/log/lightdm/lightdm.log 2>&1 | tail -25 | sed "s|^|$P |"
+        echo "$P --- journal user liveuser (diagnostik) ---"
+        journalctl _UID=1000 --no-pager -n 30 2>&1 | tail -25 | sed "s|^|$P |"
+    fi
 fi
 
 if [[ "$fail" -eq 0 ]]; then
