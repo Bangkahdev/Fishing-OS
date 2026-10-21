@@ -6,11 +6,11 @@
 
 **Fishing OS** adalah live/rescue ISO berbasis Arch Linux untuk pengembang dan
 engineer DevOps. Boot dari USB atau mesin virtual, lalu langsung punya git,
-Docker, kubectl, Helm, Terraform, Ansible, dan toolchain pemrograman tanpa
-instalasi apa pun.
+Docker, kubectl, Helm, Terraform, Ansible, toolchain pemrograman, dan desktop
+XFCE dengan Firefox tanpa instalasi apa pun.
 
-> Status: pengembangan aktif. Saat ini berupa **live medium berbasis konsol**
-> (tanpa desktop). Desktop dan installer ke disk direncanakan untuk fase 2.
+> Status: pengembangan aktif. ISO menyediakan **live medium konsol (zsh) plus
+> desktop XFCE** (autologin `liveuser`). Installer ke disk masih rencana fase 2.
 
 ---
 
@@ -132,13 +132,16 @@ seluruh isinya. Di Windows gunakan Rufus dengan mode **DD Image**, atau Ventoy.
 ditandatangani untuk Secure Boot.
 
 Menu boot menyediakan entri live, opsi `with speech` (pembaca layar), memtest86+,
-dan HDT (informasi perangkat keras).
+dan HDT (informasi perangkat keras). Setelah login, LightDM masuk otomatis ke
+sesi XFCE sebagai `liveuser`.
 
 ---
 
 ## Memulai
 
-Setelah boot, sistem otomatis login sebagai `liveuser` di konsol (shell zsh).
+Setelah boot, LightDM masuk otomatis ke **desktop XFCE** sebagai `liveuser`.
+Untuk bekerja di konsol, buka terminal (mis. `xfce4-terminal`) atau tekan
+`Ctrl+Alt+F2` untuk TTY; shell default adalah zsh.
 
 ```bash
 # Cek versi semua alat pemrograman
@@ -184,6 +187,8 @@ iwctl
 | Build | make, cmake, gcc, gdb |
 | Jaringan dan debug | curl, wget, jq, tcpdump, nmap, socat, mtr, traceroute, ssh, iproute2 |
 | Shell dan editor | zsh, fish, bash, vim, neovim, nano, tmux, fzf, bat, fd, ripgrep, htop |
+| Desktop | XFCE (xfce4, xfce4-goodies), LightDM, Firefox |
+| Informasi sistem | fastfetch (logo huruf F), htop, dmidecode |
 | Perangkat keras | dmidecode, pciutils, usbutils, memtest86+ |
 | Aksesibilitas | espeak-ng dan espeakup (opsi boot `with speech`) |
 
@@ -201,8 +206,8 @@ Fishing OS adalah **live/rescue medium**, bukan sistem yang dipasang ke disk.
   `fishing-setup` memakai password yang kamu atur dan sudo tanpa password.
   **Jangan pakai di jaringan yang tidak tepercaya** tanpa mengganti kredensial.
 - Semua perubahan hilang setelah reboot. Installer ke disk belum ada (fase 2).
-- Desktop environment dan browser belum disertakan (fase 2). Batas ukuran ISO
-  2000 MiB mengikuti batas berkas GitHub Releases.
+- Batas ukuran ISO 2000 MiB mengikuti batas berkas GitHub Releases; penambahan
+  desktop dan Firefox masih berada dalam batas ini.
 - Secure Boot tidak didukung (lihat bagian menjalankan ISO).
 - ISO tidak memuat repositori paket sendiri; `pacman` memakai mirror Arch resmi.
 
