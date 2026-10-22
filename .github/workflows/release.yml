@@ -74,40 +74,52 @@ jobs:
           printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --pinentry-mode loopback \
             --passphrase-file "$PASSFILE" --import
 
-          # Cari kunci yang uid-nya cocok dengan GPG_USER. PENTING: gpg dengan
-          # selector string uid bisa mengembalikan kosong secara acak
+          # Cari SEMUA kunci yang uid-nya cocok dengan GPG_USER. PENTING: gpg
+          # dengan selector string uid bisa mengembalikan kosong secara acak
           # ("nothing exported" / "No public key"), jadi keyring di-enumerate
-          # penuh lalu dicocokkan sendiri, dan selector berikutnya memakai
-          # fingerprint (yang stabil).
-          find_fpr_by_uid() {
+          # penuh lalu dicocokkan sendiri. Satu uid bisa dimiliki lebih dari
+          # satu kunci, jadi semuanya dikumpulkan; yang dipakai nanti adalah
+          # yang fingerprint-nya sama persis dengan EXPECTED_FPR.
+          find_fprs_by_uid() {
             gpg --batch --with-colons --list-keys 2>/dev/null | awk -F: -v want="$GPG_USER" '
               /^pub:/ { fpr = "" }
               /^fpr:/ && fpr == "" { fpr = $10 }
-              /^uid:/ { if (fpr != "" && index($10, want) > 0) { print fpr; exit } }
+              /^uid:/ { if (fpr != "" && index($10, want) > 0) { print fpr; fpr = "" } }
             '
           }
 
+          # Normalisasi: gpg menampilkan fingerprint dengan spasi, sedangkan
+          # repository variable bisa ditulis dengan atau tanpa spasi.
+          normalize_fpr() { printf '%s' "$1" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'; }
+          EXPECTED_NORM="$(normalize_fpr "$EXPECTED_FPR")"
+
           FPR=""
+          CANDIDATES=""
           for _ in 1 2 3 4 5 6 7 8 9 10; do
-            FPR="$(find_fpr_by_uid)"
+            CANDIDATES="$(find_fprs_by_uid)"
+            if [[ -n "$CANDIDATES" ]]; then
+              while read -r c; do
+                [[ -z "$c" ]] && continue
+                if [[ "$(normalize_fpr "$c")" == "$EXPECTED_NORM" ]]; then
+                  FPR="$c"
+                  break
+                fi
+              done <<< "$CANDIDATES"
+            fi
             if [[ -n "$FPR" ]]; then
               break
             fi
             sleep 1
           done
 
-          # Normalisasi: gpg menampilkan fingerprint dengan spasi, sedangkan
-          # repository variable bisa ditulis dengan atau tanpa spasi.
-          FPR_NORM="$(printf '%s' "$FPR" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
-          EXPECTED_NORM="$(printf '%s' "$EXPECTED_FPR" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
-          if [[ -z "$FPR_NORM" ]]; then
-            echo "::error::Kunci untuk $GPG_USER tidak ditemukan di GPG_PRIVATE_KEY."
+          if [[ -z "$FPR" ]]; then
+            echo "::error::Kunci untuk $GPG_USER dengan fingerprint $EXPECTED_FPR tidak ditemukan di GPG_PRIVATE_KEY."
+            if [[ -n "$CANDIDATES" ]]; then
+              echo "::error::Kandidat yang tersedia: $(echo "$CANDIDATES" | tr '\n' ' ')"
+            fi
             exit 1
           fi
-          if [[ "$FPR_NORM" != "$EXPECTED_NORM" ]]; then
-            echo "::error::Fingerprint kunci ($FPR) tidak sama dengan vars.GPG_FINGERPRINT ($EXPECTED_FPR)"
-            exit 1
-          fi
+          FPR_NORM="$(normalize_fpr "$FPR")"
           echo "Fingerprint kunci terverifikasi: $FPR"
 
           # Kunci harus benar-benar bisa dipakai menandatangani.
