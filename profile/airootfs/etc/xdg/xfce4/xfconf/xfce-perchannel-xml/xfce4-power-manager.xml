@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-power-manager" version="1.0">
+  <!-- Live medium: layar tidak boleh kosong/terkunci saat idle.
+       liveuser tidak punya password, jadi layar terkunci = live medium buntu. -->
+  <property name="dpms-enabled" type="bool" value="false"/>
+  <property name="dpms-on-ac-off" type="bool" value="false"/>
+  <property name="dpms-on-battery-off" type="bool" value="false"/>
+  <property name="lid-trigger-lock-screen" type="bool" value="false"/>
+  <property name="lock-screen-suspend-hibernate" type="bool" value="false"/>
+</channel>
