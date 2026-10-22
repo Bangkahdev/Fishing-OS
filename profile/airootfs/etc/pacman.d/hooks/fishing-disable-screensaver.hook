@@ -1,0 +1,21 @@
+# Nonaktifkan autostart XFCE screensaver untuk live medium.
+#
+# XFCE screensaver mengunci layar setelah idle. Pada live medium user
+# 'liveuser' tidak memiliki password, sehingga layar yang terkunci tidak bisa
+# dibuka lagi -> live medium buntu.
+#
+# File /etc/xdg/autostart/xfce4-screensaver.desktop milik paket
+# xfce4-screensaver, jadi tidak bisa diganti langsung di airootfs (akan
+# bentrok saat build). Hook ini menimpanya setelah paket terpasang.
+
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = xfce4-screensaver
+
+[Action]
+Description = Disable XFCE screensaver autostart for live medium
+When = PostTransaction
+Depends = sh
+Exec = /bin/sh -c 'printf "[Desktop Entry]\nType=Application\nName=Fishing OS Screensaver (nonaktif)\nHidden=true\nX-GNOME-Autostart-enabled=false\n" > /etc/xdg/autostart/xfce4-screensaver.desktop'
