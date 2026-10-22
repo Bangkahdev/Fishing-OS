@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Cek versi alat pemrograman yang terpasang
+# Cek versi alat pemrograman yang terpasang.
+# Daftar harus sinkron dengan profile/packages.x86_64: alat yang tidak
+# ada di ISO tidak boleh ditampilkan sebagai "belum terpasang" (mis.
+# rustc dan java sengaja tidak disertakan agar ukuran ISO tetap di bawah
+# batas aset GitHub 2 GiB).
 
 echo "===== Fishing OS - Alat Pemrograman Tersedia ====="
 echo
@@ -23,8 +27,6 @@ check ansible
 check python3
 check node
 check go
-check rustc
-check java
 check make
 check cmake
 check gcc
