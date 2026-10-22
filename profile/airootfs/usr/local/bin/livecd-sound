@@ -14,10 +14,13 @@ usage() {
 _EOF_
 }
 
-bugout() {
-    printf "/usr/local/bin/livecdsound: programming error"
-    stat_fail
-}
+  bugout() {
+      # Dulu pemanggil 'stat_fail' yang tidak terdefinisi di image ini, jadi
+      # error hanya muncul sebagai "command not found" dan skrip tetap jalan
+      # dengan argumen kosong. Sekarang error dihentikan dengan exit non-zero.
+      printf "/usr/local/bin/livecdsound: programming error\n" >&2
+      exit 1
+  }
 
 echo_card_indices() {
     if [[ -f /proc/asound/cards ]]; then
@@ -174,10 +177,13 @@ set_default_card() {
         >/etc/asound.conf
 }
 
-play_on_card() {
-    local card="$1" file="$2"
-    aplay -q "-Dplughw:$card,0" "$file"
-}
+  play_on_card() {
+      local card="$1" file="$2"
+      # File suara (.wav) tidak disertakan di image ini; jangan gagalkan
+      # seluruh alur hanya karena umpan balik suara tidak tersedia.
+      [[ -f "$file" ]] || return 0
+      aplay -q "-Dplughw:$card,0" "$file"
+  }
 
 # If there are multiple usable sound cards, prompt the user to choose one,
 # using auditory feedback.
@@ -186,10 +192,14 @@ pick_a_card() {
     mapfile -t usable_cards < <(list_non_pcsp_cards)
     num_usable_cards="${#usable_cards[@]}"
 
-    if (( num_usable_cards == 1 )); then
-        systemd-cat -t "livecdsound" printf "Only one sound card is detected\n"
-        exit 0
-    fi
+      if (( num_usable_cards == 1 )); then
+          systemd-cat -t "livecdsound" printf "Only one sound card is detected\n"
+          # Satu-satunya kartu harus langsung dijadikan default, kalau tidak
+          # /etc/asound.conf tidak pernah ditulis dan output suara memakai
+          # device ALSA bawaan.
+          set_default_card "${usable_cards[0]}"
+          exit 0
+      fi
     systemd-cat -t "livecdsound" printf "multiple sound cards detected\n"
     for card in "${usable_cards[@]}"; do
         if ! is_numeric "$card"; then
