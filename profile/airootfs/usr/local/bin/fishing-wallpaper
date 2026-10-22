@@ -1,0 +1,43 @@
+#!/bin/sh
+# Pasang wallpaper Fishing OS pada monitor yang sedang terhubung.
+# xfdesktop 4.20 menyimpan backdrop di /backdrop/screenN/monitor<konektor>/
+# (mis. monitorVGA-1), jadi nama konektor dibaca dari DRM agar tidak perlu
+# menebak. Skrip ini pelengkap /etc/skel: kalau konektornya belum ada di
+# konfigurasi bawaan (HDMI/DP lain), properti dibuat di sini.
+set -eu
+
+IMG=/usr/share/backgrounds/fishing-os.jpg
+[ -f "$IMG" ] || exit 0
+
+set_prop() {
+    # $1 = path, $2 = tipe, $3 = nilai
+    xfconf-query -c xfce4-desktop -p "$1" -n -t "$2" -s "$3" 2>/dev/null \
+        || xfconf-query -c xfce4-desktop -p "$1" -s "$3" 2>/dev/null \
+        || true
+}
+
+# beri kesempatan xfconfd siap (session baru)
+i=0
+while [ "$i" -lt 20 ]; do
+    xfconf-query -c xfce4-desktop -l >/dev/null 2>&1 && break
+    i=$((i + 1))
+    sleep 0.5
+done
+
+for status in /sys/class/drm/*/status; do
+    [ -r "$status" ] || continue
+    [ "$(cat "$status" 2>/dev/null)" = "connected" ] || continue
+
+    conn=$(basename "$(dirname "$status")" | sed 's/^card[0-9]*-//')
+    [ -n "$conn" ] || continue
+
+    for screen in screen0 screen1; do
+        base="/backdrop/$screen/monitor$conn"
+        set_prop "$base/last-image" string "$IMG"
+        set_prop "$base/image-style" int 5
+        for ws in 0 1 2 3; do
+            set_prop "$base/workspace$ws/last-image" string "$IMG"
+            set_prop "$base/workspace$ws/image-style" int 5
+        done
+    done
+done
