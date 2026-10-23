@@ -25,7 +25,7 @@ function inlineCss(): Plugin {
       }
       html.source = source
     },
-  }
+  };
 }
 
 // https://vite.dev/config/
