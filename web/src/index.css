@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter";
+@import "@fontsource-variable/archivo";
 @import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
@@ -13,19 +13,19 @@
   --card-foreground: oklch(0.27 0.025 240);
   --popover: oklch(0.997 0.002 225);
   --popover-foreground: oklch(0.27 0.025 240);
-  --primary: oklch(0.5 0.08 210);
+  --primary: oklch(0.49 0.075 228);
   --primary-foreground: oklch(0.99 0.005 210);
   --secondary: oklch(0.955 0.01 220);
   --secondary-foreground: oklch(0.31 0.03 235);
   --muted: oklch(0.962 0.008 220);
   --muted-foreground: oklch(0.5 0.02 235);
-  --accent: oklch(0.945 0.02 210);
+  --accent: oklch(0.945 0.018 225);
   --accent-foreground: oklch(0.31 0.04 225);
   --destructive: oklch(0.56 0.17 27);
   --destructive-foreground: oklch(0.98 0.01 20);
   --border: oklch(0.905 0.01 220);
   --input: oklch(0.905 0.01 220);
-  --ring: oklch(0.5 0.08 210);
+  --ring: oklch(0.49 0.075 228);
 
   /* Fishing OS brand */
   --brand-deep: oklch(0.32 0.05 230);
@@ -80,7 +80,7 @@
   --color-brand-mid: var(--brand-mid);
   --color-brand-bright: var(--brand-bright);
 
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 
   --radius-sm: calc(var(--radius) - 4px);

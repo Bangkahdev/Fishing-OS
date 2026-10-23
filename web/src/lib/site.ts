@@ -197,11 +197,11 @@ export const commands = [
   },
   {
     cmd: "sudo fishing-container up",
-    desc: "Menjalankan Docker daemon. Gunakan down atau status untuk menghentikan dan memeriksa.",
+    desc: "Menjalankan Docker daemon.",
   },
   {
     cmd: "sudo fishing-setup",
-    desc: "Mengaktifkan layanan jaringan dan membuat user dev dengan grup wheel dan docker.",
+    desc: "Mengaktifkan jaringan dan menyiapkan user dev di grup wheel & docker.",
   },
 ]
 

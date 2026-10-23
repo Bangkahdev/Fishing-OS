@@ -150,8 +150,7 @@ export function Download() {
             </div>
 
             <p className="text-[13px] leading-relaxed text-muted-foreground">
-              Tautan mengarah ke rilis v{version}. Jika rilis baru sudah terbit,
-              halaman ini mengikuti versi terbaru secara otomatis.
+              Tautan selalu mengarah ke rilis terbaru.
             </p>
           </CardContent>
         </Card>
@@ -189,13 +188,12 @@ export function Download() {
             </CardHeader>
             <CardContent className="space-y-2 text-[13px]">
               <p className="text-muted-foreground">{site.signer}</p>
-              <p className="font-mono text-xs leading-relaxed break-all">
+              <p className="font-mono text-xs leading-relaxed break-all text-balance">
                 {site.fingerprint}
               </p>
               <p className="text-[13px] leading-relaxed text-muted-foreground">
-                RSA 4096. Peringatan{" "}
-                <em>User ID is not certified</em> itu normal untuk kunci baru:
-                yang penting baris fingerprint sama persis.
+                RSA 4096. Peringatan <em>User ID is not certified</em> itu normal;
+                cocokkan fingerprint.
               </p>
             </CardContent>
           </Card>

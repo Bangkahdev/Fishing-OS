@@ -28,7 +28,7 @@ export function Quickstart() {
 
               <TabsContent value="vm" className="mt-3 space-y-3">
                 <p className="text-[13.5px] leading-relaxed text-muted-foreground">
-                  Butuh RAM 2 GB atau lebih. Contoh QEMU mode BIOS:
+                  Butuh RAM 2 GB. Contoh QEMU (BIOS):
                 </p>
                 <CodeBlock
                   code={`qemu-system-x86_64 -enable-kvm -m 4G -smp 2 \\
@@ -97,9 +97,9 @@ export function Quickstart() {
 
       <ol className="mt-6 grid gap-x-8 gap-y-5 border-t border-border/60 pt-5 sm:grid-cols-3">
         {[
-          ["01", "Tulis atau pasang", "USB dengan dd/Rufus, atau ISO sebagai DVD di mesin virtual."],
+          ["01", "Tulis atau pasang", "USB lewat dd/Rufus, atau ISO sebagai DVD VM."],
           ["02", "Boot dan masuk", "Pilih entri live di menu boot."],
-          ["03", "Bekerja", "Jalankan fishing-check untuk melihat toolchain, lalu mulai."],
+          ["03", "Bekerja", "Jalankan fishing-check untuk melihat toolchain."],
         ].map(([n, title, body]) => (
           <li key={n} className="flex gap-3">
             <span className="font-mono text-xs leading-5 text-primary">{n}</span>
