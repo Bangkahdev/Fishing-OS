@@ -4,6 +4,7 @@
 # ada di ISO tidak boleh ditampilkan sebagai "belum terpasang" (mis.
 # rustc dan java sengaja tidak disertakan agar ukuran ISO tetap di bawah
 # batas aset GitHub 2 GiB).
+
 #
 # Setiap alat punya perintah versinya sendiri dan dibungkus timeout agar
 # tidak ada yang menggantung menunggu jaringan (mis. kubectl yang mencoba
@@ -27,6 +28,7 @@ check() {
     [ -n "$out" ] || out="(versi tidak terbaca)"
     printf "%-18s %s\n" "$cmd" "$out"
 }
+
 
 check git            "--version"
 check gh             "--version"
