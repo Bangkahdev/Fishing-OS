@@ -36,11 +36,19 @@ LOG="/tmp/user_scenario.log"
     # 3. Cek versi alat kunci
     echo "[3/6] Versi alat kunci..."
     for cmd in docker kubectl terraform ansible python3 node go git; do
-        if command -v "$cmd" >/dev/null 2>&1; then
-            printf "  %-12s %s\n" "$cmd" "$("$cmd" --version 2>/dev/null | head -n1 || "$cmd" version 2>/dev/null | head -n1)"
-        else
+        if ! command -v "$cmd" >/dev/null 2>&1; then
             printf "  %-12s (tidak terpasang)\n" "$cmd"
+            continue
         fi
+
+        case "$cmd" in
+            kubectl) args="version --client" ;;
+            ssh)     args="-V" ;;
+            *)       args="--version" ;;
+        esac
+
+        # shellcheck disable=SC2086
+        printf "  %-12s %s\n" "$cmd" "$(timeout 8 "$cmd" $args 2>&1 | head -n1)"
     done
     echo
 

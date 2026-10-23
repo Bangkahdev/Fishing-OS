@@ -1,0 +1,115 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+
+  --background: oklch(0.99 0.004 200);
+  --foreground: oklch(0.21 0.02 240);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 240);
+  --primary: oklch(0.52 0.12 205);
+  --primary-foreground: oklch(0.99 0.01 200);
+  --secondary: oklch(0.96 0.01 210);
+  --secondary-foreground: oklch(0.28 0.03 235);
+  --muted: oklch(0.965 0.008 210);
+  --muted-foreground: oklch(0.52 0.02 235);
+  --accent: oklch(0.93 0.03 200);
+  --accent-foreground: oklch(0.3 0.05 225);
+  --destructive: oklch(0.58 0.21 27);
+  --destructive-foreground: oklch(0.98 0.01 20);
+  --border: oklch(0.9 0.01 215);
+  --input: oklch(0.9 0.01 215);
+  --ring: oklch(0.52 0.12 205);
+
+  /* Fishing OS brand */
+  --brand-deep: oklch(0.28 0.06 235);
+  --brand-mid: oklch(0.52 0.12 205);
+  --brand-bright: oklch(0.72 0.13 195);
+}
+
+.dark {
+  --background: oklch(0.17 0.025 240);
+  --foreground: oklch(0.95 0.01 210);
+  --card: oklch(0.21 0.03 240);
+  --card-foreground: oklch(0.95 0.01 210);
+  --popover: oklch(0.21 0.03 240);
+  --popover-foreground: oklch(0.95 0.01 210);
+  --primary: oklch(0.72 0.13 195);
+  --primary-foreground: oklch(0.18 0.03 235);
+  --secondary: oklch(0.26 0.03 235);
+  --secondary-foreground: oklch(0.93 0.01 210);
+  --muted: oklch(0.25 0.025 235);
+  --muted-foreground: oklch(0.72 0.02 215);
+  --accent: oklch(0.3 0.04 225);
+  --accent-foreground: oklch(0.94 0.02 205);
+  --destructive: oklch(0.63 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 20);
+  --border: oklch(0.32 0.03 235);
+  --input: oklch(0.32 0.03 235);
+  --ring: oklch(0.72 0.13 195);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-mid: var(--brand-mid);
+  --color-brand-bright: var(--brand-bright);
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  code,
+  kbd,
+  pre {
+    font-family: var(--font-mono);
+  }
+}
+
+@utility glass {
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+  backdrop-filter: blur(12px);
+}

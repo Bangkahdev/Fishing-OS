@@ -27,4 +27,5 @@ file_permissions=(
   ["/usr/local/bin/fishing-container"]="0:0:755"
   ["/usr/local/bin/fishing-setup"]="0:0:755"
   ["/usr/local/bin/fishing-smoketest"]="0:0:755"
+  ["/usr/local/bin/fishing-wallpaper"]="0:0:755"
 )

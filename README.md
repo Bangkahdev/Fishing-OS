@@ -315,3 +315,7 @@ Rencana dan keputusan desain ada di [`docs/SRS.md`](docs/SRS.md).
 Kode dan konfigurasi profil ini dilisensikan di bawah **GNU GPL v3**
 (lihat [`LICENSE`](LICENSE)). Paket-paket di dalam ISO memiliki lisensi
 masing-masing dari repositori Arch Linux.
+
+---
+
+Bagian dari gudang project publik **[Bangkah](https://bangkah.tech)** — dokumentasi dan alat developer di satu domain.

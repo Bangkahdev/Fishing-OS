@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fishing OS — Live rescue ISO dengan toolchain lengkap</title>
+    <meta
+      name="description"
+      content="Live/rescue ISO berbasis Arch Linux untuk developer dan engineer DevOps. Boot dari USB atau mesin virtual dan langsung dapat git, Docker, kubectl, Helm, Terraform, Ansible, serta desktop XFCE."
+    />
+    <meta name="theme-color" content="#0f2a3d" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fishing OS — Live rescue ISO dengan toolchain lengkap" />
+    <meta
+      property="og:description"
+      content="Satu USB, seluruh toolchain siap pakai. Arch Linux live ISO dengan Docker, Kubernetes, Terraform, Ansible, dan desktop XFCE."
+    />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("fishing-theme")
+          var dark =
+            stored === "dark" ||
+            (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
+          document.documentElement.classList.toggle("dark", dark)
+        } catch (e) {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
