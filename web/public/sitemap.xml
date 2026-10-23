@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+>
+  <url>
+    <loc>https://fishingos.bangkah.tech/</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://fishingos.bangkah.tech/screenshots/01-boot-menu.png</image:loc>
+      <image:title>Menu boot Fishing OS</image:title>
+      <image:caption>Entri live, boot dengan speech, memtest86+, dan HDT untuk BIOS dan UEFI.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fishingos.bangkah.tech/screenshots/02-desktop.png</image:loc>
+      <image:title>Desktop XFCE Fishing OS</image:title>
+      <image:caption>LightDM masuk otomatis sebagai liveuser tanpa dialog login.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fishingos.bangkah.tech/screenshots/03-fishing-check.png</image:loc>
+      <image:title>fishing-check</image:title>
+      <image:caption>Versi git, Docker, kubectl, Helm, Terraform, dan Ansible dalam satu perintah.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fishingos.bangkah.tech/screenshots/04-fastfetch.png</image:loc>
+      <image:title>fastfetch</image:title>
+      <image:caption>Ringkasan sistem live: kernel, desktop, paket, dan memori.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fishingos.bangkah.tech/screenshots/05-htop.png</image:loc>
+      <image:title>htop</image:title>
+      <image:caption>Pemantauan proses tanpa instalasi di Fishing OS live.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fishingos.bangkah.tech/screenshots/06-firefox.png</image:loc>
+      <image:title>Firefox di Fishing OS</image:title>
+      <image:caption>Peramban siap pakai untuk dokumentasi, dashboard, atau konsol cloud.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fishingos.bangkah.tech/screenshots/07-terminal-tools.png</image:loc>
+      <image:title>Perkakas bawaan Fishing OS</image:title>
+      <image:caption>Skrip Fishing OS di /usr/local/bin dan antarmuka jaringan dari shell.</image:caption>
+    </image:image>
+  </url>
+</urlset>

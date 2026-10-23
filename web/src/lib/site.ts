@@ -1,17 +1,19 @@
 export const site = {
   name: "Fishing OS",
-  tagline: "Live rescue ISO untuk developer dan engineer DevOps",
+  tagline: "Live rescue ISO berbasis Arch Linux untuk programmer",
   description:
-    "Live/rescue ISO berbasis Arch Linux. Boot dari USB atau mesin virtual, langsung dapat git, Docker, kubectl, Helm, Terraform, Ansible, toolchain pemrograman, dan desktop XFCE tanpa instalasi.",
+    "Live/rescue ISO berbasis Arch Linux. Boot dari USB atau mesin virtual dan langsung dapat editor, compiler, Python, Node.js, Go, git, Docker, dan desktop XFCE tanpa instalasi.",
   repo: "https://github.com/Bangkahdev/Fishing-OS",
   repoApi: "https://api.github.com/repos/Bangkahdev/Fishing-OS",
   releases: "https://github.com/Bangkahdev/Fishing-OS/releases",
   issues: "https://github.com/Bangkahdev/Fishing-OS/issues",
+  author: "Muhammad Dhiyaul Atha",
+  authorUrl: "https://github.com/Bangkahdev",
   license: "GPL-3.0",
   fingerprint: "69AA 973A 33A3 930B B1C8 3850 F713 BCD7 D6E8 F591",
   fingerprintFlat: "69AA973A33A3930BB1C83850F713BCD7D6E8F591",
   signer: "Fishing OS CI <bangkah@mdhiyaulatha.me>",
-  fallbackVersion: "2026.10.24",
+  fallbackVersion: "2026.10.25",
   base: "Arch Linux x86_64",
   isoLimit: "2000 MiB",
 }
@@ -31,7 +33,11 @@ export function isoName(version: string) {
 export type Screenshot = {
   src: string
   title: string
+  alt: string
   caption: string
+  width: number
+  height: number
+  variants: number[]
   wide?: boolean
 }
 
@@ -39,46 +45,82 @@ export const screenshots: Screenshot[] = [
   {
     src: "/screenshots/01-boot-menu.png",
     title: "Menu boot",
+    alt: "Menu boot Fishing OS dengan entri live, boot dengan speech, memtest86+, dan HDT",
     caption:
       "Entri live, boot dengan speech, memtest86+, dan HDT. BIOS dan UEFI didukung.",
+    width: 624,
+    height: 476,
+    variants: [480, 624],
     wide: true,
   },
   {
     src: "/screenshots/02-desktop.png",
     title: "Desktop XFCE",
+    alt: "Desktop XFCE Fishing OS setelah autologin sebagai liveuser",
     caption:
       "LightDM masuk otomatis sebagai liveuser. Tidak ada dialog login yang menghalangi.",
+    width: 1024,
+    height: 768,
+    variants: [480, 768, 1024],
   },
   {
     src: "/screenshots/03-fishing-check.png",
     title: "fishing-check",
+    alt: "Terminal fishing-check menampilkan versi git, Docker, kubectl, Helm, Terraform, dan Ansible",
     caption:
       "Satu perintah untuk melihat versi git, Docker, kubectl, Helm, Terraform, Ansible, dan bahasa yang tersedia.",
+    width: 1024,
+    height: 768,
+    variants: [480, 768, 1024],
   },
   {
     src: "/screenshots/04-fastfetch.png",
     title: "fastfetch",
+    alt: "fastfetch menampilkan ringkasan kernel, desktop, paket, dan memori Fishing OS",
     caption: "Ringkasan sistem live: kernel, desktop, paket, dan memori.",
+    width: 1024,
+    height: 768,
+    variants: [480, 768, 1024],
   },
   {
     src: "/screenshots/05-htop.png",
     title: "htop",
+    alt: "htop memantau proses dan penggunaan memori di Fishing OS live",
     caption:
       "Pemantauan proses tanpa instalasi. Docker berjalan di tmpfs, jadi memori perlu diawasi.",
+    width: 1024,
+    height: 768,
+    variants: [480, 768, 1024],
   },
   {
     src: "/screenshots/06-firefox.png",
     title: "Firefox",
+    alt: "Firefox terbuka di desktop XFCE Fishing OS untuk mengakses dokumentasi",
     caption:
       "Peramban siap pakai untuk dokumentasi, dashboard, atau konsol cloud.",
+    width: 1024,
+    height: 768,
+    variants: [480, 768, 1024],
   },
   {
     src: "/screenshots/07-terminal-tools.png",
     title: "Perkakas bawaan",
+    alt: "Skrip Fishing OS di /usr/local/bin dan perkakas terminal siap dipakai",
     caption:
       "Skrip Fishing OS di /usr/local/bin, kernel, dan antarmuka jaringan langsung tersedia dari shell.",
+    width: 1024,
+    height: 768,
+    variants: [480, 768, 1024],
   },
 ]
+
+export function webpSrc(src: string, width: number) {
+  return src.replace(/\.png$/, `-${width}.webp`)
+}
+
+export function webpSrcSet(shot: Screenshot) {
+  return shot.variants.map((w) => `${webpSrc(shot.src, w)} ${w}w`).join(", ")
+}
 
 export const features = [
   {
@@ -93,8 +135,8 @@ export const features = [
   },
   {
     icon: "package",
-    title: "Toolchain DevOps lengkap",
-    body: "git, gh, Docker, kubectl, Helm, Terraform, Ansible, Python, Node.js, Go, dan compiler C/C++ sudah terpasang.",
+    title: "Perkakas programmer lengkap",
+    body: "git, Python, Node.js, Go, compiler C/C++, Docker, kubectl, Helm, Terraform, dan Ansible sudah terpasang.",
   },
   {
     icon: "wifi",

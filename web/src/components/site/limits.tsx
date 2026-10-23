@@ -14,17 +14,16 @@ export function Limits() {
   return (
     <Section
       id="batasan"
-      eyebrow="Batasan & build"
       title="Apa yang perlu kamu tahu sebelum memakai"
       description="Fishing OS adalah live/rescue medium, bukan sistem yang dipasang ke disk. Batasan berikut disengaja dan didokumentasikan."
     >
       <div className="grid items-start gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-xl border border-border/70 bg-card/60 px-4">
+        <div className="rounded-xl border border-border/70 bg-card px-5">
           <Accordion defaultValue={["0"]}>
             {limitations.map((item, i) => (
               <AccordionItem key={item.q} value={String(i)}>
                 <AccordionTrigger>{item.q}</AccordionTrigger>
-                <AccordionContent className="text-[12.5px] leading-relaxed text-muted-foreground">
+                <AccordionContent className="text-[13.5px] leading-relaxed text-muted-foreground">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>
@@ -35,15 +34,15 @@ export function Limits() {
         <div className="flex flex-col gap-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[13.5px]">
+              <CardTitle className="flex items-center gap-2 text-sm">
                 <TerminalIcon className="size-4 text-primary" />
                 Bangun sendiri
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2.5">
-              <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+              <p className="text-[13.5px] leading-relaxed text-muted-foreground">
                 Butuh Arch Linux atau container Arch dengan paket{" "}
-                <code className="font-mono text-[11.5px]">archiso</code>.
+                <code className="font-mono text-xs">archiso</code>.
               </p>
               <CodeBlock
                 compact
@@ -57,12 +56,12 @@ bash tests/test_iso.sh out/*.iso`}
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[13.5px]">
+              <CardTitle className="flex items-center gap-2 text-sm">
                 <GitBranchIcon className="size-4 text-primary" />
                 Kontribusi
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-[12.5px] leading-relaxed text-muted-foreground">
+            <CardContent className="space-y-2 text-[13.5px] leading-relaxed text-muted-foreground">
               <p>
                 Kirim Pull Request ke <code className="font-mono">main</code>. CI
                 menjalankan shellcheck, yamllint, validasi menu boot, build ISO,
@@ -70,13 +69,13 @@ bash tests/test_iso.sh out/*.iso`}
               </p>
               <p>
                 Sebelum mengirim PR, jalankan shellcheck pada skrip yang diubah dan{" "}
-                <code className="font-mono text-[11.5px]">bash tests/check_bootmenu.sh</code>.
+                <code className="font-mono text-xs">bash tests/check_bootmenu.sh</code>.
               </p>
               <a
                 href={`${site.repo}/blob/main/docs/SRS.md`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block text-[12.5px] text-primary hover:underline"
+                className="inline-block text-[13px] text-primary hover:underline"
               >
                 Baca SRS (spesifikasi kebutuhan) →
               </a>

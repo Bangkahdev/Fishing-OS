@@ -3,7 +3,6 @@ import { cn } from "cn"
 
 type SectionProps = {
   id?: string
-  eyebrow?: string
   title: ReactNode
   description?: ReactNode
   children: ReactNode
@@ -13,7 +12,6 @@ type SectionProps = {
 
 export function Section({
   id,
-  eyebrow,
   title,
   description,
   children,
@@ -24,28 +22,23 @@ export function Section({
     <section
       id={id}
       className={cn(
-        "scroll-mt-16 py-14 sm:py-16",
-        bordered && "border-y border-border/70 bg-muted/30",
+        "scroll-mt-16 py-16 sm:py-20",
+        bordered && "border-y border-border/60 bg-muted/30",
         className
       )}
     >
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <div className="max-w-2xl">
-          {eyebrow && (
-            <p className="font-mono text-[11px] tracking-[0.14em] text-primary uppercase">
-              {eyebrow}
-            </p>
-          )}
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+      <div className="mx-auto w-full px-4 sm:px-8 lg:px-12">
+        <div className="max-w-3xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-[2.1rem]">
             {title}
           </h2>
           {description && (
-            <p className="mt-3 text-[14.5px] leading-relaxed text-muted-foreground">
+            <p className="mt-3.5 text-[15px] leading-relaxed text-pretty text-muted-foreground">
               {description}
             </p>
           )}
         </div>
-        <div className="mt-8">{children}</div>
+        <div className="mt-9">{children}</div>
       </div>
     </section>
   )

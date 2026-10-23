@@ -1,0 +1,64 @@
+{
+  "id": "/",
+  "name": "Fishing OS",
+  "short_name": "Fishing OS",
+  "description": "Live rescue ISO berbasis Arch Linux dengan editor, compiler, Python, Node.js, Go, git, Docker, dan desktop XFCE.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f2a3d",
+  "theme_color": "#0f2a3d",
+  "categories": ["developer", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon-64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/02-desktop.png",
+      "sizes": "1024x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop XFCE Fishing OS setelah autologin"
+    },
+    {
+      "src": "/screenshots/01-boot-menu.png",
+      "sizes": "624x476",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Menu boot Fishing OS dengan entri live dan memtest86+"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Unduh ISO",
+      "short_name": "Unduh",
+      "description": "Buka bagian unduhan dan verifikasi rilis",
+      "url": "/#unduh",
+      "icons": [{ "src": "/favicon-64.png", "sizes": "64x64", "type": "image/png" }]
+    },
+    {
+      "name": "Panduan boot",
+      "short_name": "Mulai",
+      "description": "Cara menulis ISO ke USB atau menjalankannya di mesin virtual",
+      "url": "/#mulai",
+      "icons": [{ "src": "/favicon-64.png", "sizes": "64x64", "type": "image/png" }]
+    }
+  ]
+}

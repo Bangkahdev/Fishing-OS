@@ -1,6 +1,5 @@
-import { DownloadIcon, FileKeyIcon, PackageIcon, ShieldCheckIcon } from "lucide-react"
+import { DownloadIcon, FileKeyIcon, ShieldCheckIcon } from "lucide-react"
 import { cn } from "cn"
-import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
@@ -65,29 +64,27 @@ export function Download() {
   return (
     <Section
       id="unduh"
-      eyebrow="Unduhan"
       title="Ambil ISO, verifikasi, lalu boot"
       description="Rilis GitHub adalah kanal utama. Setiap image disertai checksum dan tanda tangan GPG; cocokkan fingerprint dari minimal dua sumber berbeda sebelum dipakai."
     >
       <div className="grid items-start gap-4 lg:grid-cols-[1fr_0.85fr]">
         <Card>
           <CardHeader>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="gap-1.5">
-                <PackageIcon className="size-3" />
-                Rilis terbaru
-              </Badge>
-              <span className="font-mono text-[12.5px] text-muted-foreground">
-                v{version}
-              </span>
+            <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-[13px] text-muted-foreground">
+              <span className="font-medium text-foreground">Rilis terbaru</span>
+              <span aria-hidden>·</span>
+              <span className="font-mono text-xs">v{version}</span>
               {release?.publishedAt && (
-                <span className="text-[12px] text-muted-foreground">
-                  · {new Date(release.publishedAt).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </span>
+                <>
+                  <span aria-hidden>·</span>
+                  <span className="text-xs">
+                    {new Date(release.publishedAt).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
+                </>
               )}
             </div>
             <CardTitle className="mt-1 font-mono text-[15px] break-all">
@@ -99,12 +96,12 @@ export function Download() {
             <div className="flex flex-wrap gap-2">
               <a
                 href={assetUrl(version, assets.iso)}
-                className={cn(buttonVariants({ size: "lg" }), "h-10 gap-2 px-4")}
+                className={cn(buttonVariants({ size: "lg" }), "h-11 gap-2 px-5 text-sm")}
               >
                 <DownloadIcon className="size-4" />
                 Unduh ISO
                 {sizeOf(assets.iso) > 0 && (
-                  <span className="font-mono text-[11px] opacity-70">
+                  <span className="font-mono text-[11.5px] opacity-70">
                     {formatSize(sizeOf(assets.iso))}
                   </span>
                 )}
@@ -115,7 +112,7 @@ export function Download() {
                 rel="noreferrer"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
-                  "h-10 px-4"
+                  "h-11 px-5 text-sm"
                 )}
               >
                 Catatan rilis
@@ -124,30 +121,35 @@ export function Download() {
 
             <Separator />
 
-            <ul className="overflow-hidden rounded-lg border border-border/70">
-              {rows.map((r) => (
-                <li
-                  key={r.key}
-                  className="flex items-center gap-3 border-b border-border/60 px-3 py-2 last:border-0"
-                >
-                  <div className="min-w-0 flex-1">
-                    <a
-                      href={assetUrl(version, assets[r.key])}
-                      className="block truncate font-mono text-[11.5px] text-primary hover:underline"
-                      title={assets[r.key]}
-                    >
-                      {assets[r.key]}
-                    </a>
-                    <span className="text-[11px] text-muted-foreground">{r.hint}</span>
-                  </div>
-                  <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
-                    {sizeOf(assets[r.key]) > 0 ? formatSize(sizeOf(assets[r.key])) : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div>
+              <h3 className="text-[11.5px] font-medium tracking-[0.12em] text-muted-foreground uppercase">
+                Berkas rilis
+              </h3>
+              <ul className="mt-2 divide-y divide-border/60">
+                {rows.map((r) => (
+                  <li
+                    key={r.key}
+                    className="flex items-center gap-3 py-2.5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <a
+                        href={assetUrl(version, assets[r.key])}
+                        className="block truncate font-mono text-xs text-primary hover:underline"
+                        title={assets[r.key]}
+                      >
+                        {assets[r.key]}
+                      </a>
+                      <span className="text-[12.5px] text-muted-foreground">{r.hint}</span>
+                    </div>
+                    <span className="shrink-0 font-mono text-[12.5px] text-muted-foreground">
+                      {sizeOf(assets[r.key]) > 0 ? formatSize(sizeOf(assets[r.key])) : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            <p className="text-[12px] leading-relaxed text-muted-foreground">
+            <p className="text-[13px] leading-relaxed text-muted-foreground">
               Tautan mengarah ke rilis v{version}. Jika rilis baru sudah terbit,
               halaman ini mengikuti versi terbaru secara otomatis.
             </p>
@@ -157,7 +159,7 @@ export function Download() {
         <div className="flex flex-col gap-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[13.5px]">
+              <CardTitle className="flex items-center gap-2 text-sm">
                 <ShieldCheckIcon className="size-4 text-primary" />
                 Verifikasi unduhan
               </CardTitle>
@@ -180,17 +182,17 @@ export function Download() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[13.5px]">
+              <CardTitle className="flex items-center gap-2 text-sm">
                 <FileKeyIcon className="size-4 text-primary" />
                 Kunci penandatangan
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-[12.5px]">
+            <CardContent className="space-y-2 text-[13px]">
               <p className="text-muted-foreground">{site.signer}</p>
-              <p className="font-mono text-[11.5px] leading-relaxed break-all">
+              <p className="font-mono text-xs leading-relaxed break-all">
                 {site.fingerprint}
               </p>
-              <p className="text-[12px] leading-relaxed text-muted-foreground">
+              <p className="text-[13px] leading-relaxed text-muted-foreground">
                 RSA 4096. Peringatan{" "}
                 <em>User ID is not certified</em> itu normal untuk kunci baru:
                 yang penting baris fingerprint sama persis.

@@ -3,24 +3,275 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="canonical" href="https://fishingos.bangkah.tech/" />
+    <link rel="alternate" hreflang="id" href="https://fishingos.bangkah.tech/" />
+    <link rel="alternate" hreflang="x-default" href="https://fishingos.bangkah.tech/" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="Rilis Fishing OS"
+      href="https://github.com/Bangkahdev/Fishing-OS/releases.atom"
+    />
+    <link rel="preconnect" href="https://api.github.com" crossorigin />
+    <link rel="dns-prefetch" href="https://github.com" />
+    <link
+      rel="preload"
+      as="image"
+      href="/screenshots/02-desktop-768.webp"
+      imagesrcset="/screenshots/02-desktop-480.webp 480w, /screenshots/02-desktop-768.webp 768w, /screenshots/02-desktop-1024.webp 1024w"
+      imagesizes="(min-width: 1024px) 45vw, 100vw"
+      fetchpriority="high"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fishing OS — Live rescue ISO dengan toolchain lengkap</title>
+    <title>Fishing OS — Live rescue ISO Arch Linux untuk programmer</title>
     <meta
       name="description"
-      content="Live/rescue ISO berbasis Arch Linux untuk developer dan engineer DevOps. Boot dari USB atau mesin virtual dan langsung dapat git, Docker, kubectl, Helm, Terraform, Ansible, serta desktop XFCE."
+      content="Live rescue ISO berbasis Arch Linux untuk programmer. Boot dari USB atau VM, langsung dapat editor, compiler, Python, Node.js, Go, Docker, dan XFCE."
     />
-    <meta name="theme-color" content="#0f2a3d" />
+    <meta
+      name="keywords"
+      content="Fishing OS, Arch Linux live ISO, live USB programmer, rescue USB, toolchain programmer, Linux portable"
+    />
+    <meta name="author" content="Muhammad Dhiyaul Atha" />
+    <meta name="application-name" content="Fishing OS" />
+    <meta name="apple-mobile-web-app-title" content="Fishing OS" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7fafb" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f2a3d" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Fishing OS — Live rescue ISO dengan toolchain lengkap" />
+    <meta property="og:site_name" content="Fishing OS" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:url" content="https://fishingos.bangkah.tech/" />
+    <meta property="og:updated_time" content="2026-10-25T00:00:00+07:00" />
+    <meta property="og:title" content="Fishing OS — Live rescue ISO Arch Linux untuk programmer" />
     <meta
       property="og:description"
-      content="Satu USB, seluruh toolchain siap pakai. Arch Linux live ISO dengan Docker, Kubernetes, Terraform, Ansible, dan desktop XFCE."
+      content="Satu USB berisi Arch Linux, editor, compiler, Python, Node.js, Go, Docker, dan desktop XFCE. Boot dari USB atau VM, tanpa instalasi."
     />
-    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image" content="https://fishingos.bangkah.tech/og-image.jpg" />
+    <meta
+      property="og:image:secure_url"
+      content="https://fishingos.bangkah.tech/og-image.jpg"
+    />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:alt" content="Fishing OS — live rescue ISO dengan desktop XFCE dan perkakas programmer" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Fishing OS — Live rescue ISO Arch Linux untuk programmer" />
+    <meta
+      name="twitter:description"
+      content="Arch Linux live ISO dengan editor, compiler, Python, Node.js, Go, Docker, dan desktop XFCE. Boot dari USB, langsung kerja."
+    />
+    <meta name="twitter:image" content="https://fishingos.bangkah.tech/og-image.jpg" />
+    <meta
+      name="twitter:image:alt"
+      content="Fishing OS — live rescue ISO dengan desktop XFCE dan perkakas programmer"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://fishingos.bangkah.tech/#website",
+            "url": "https://fishingos.bangkah.tech/",
+            "name": "Fishing OS",
+            "alternateName": ["FishingOS", "Fishing OS Live ISO"],
+            "description": "Live rescue ISO berbasis Arch Linux dengan perkakas programmer lengkap.",
+            "inLanguage": "id-ID",
+            "publisher": { "@id": "https://fishingos.bangkah.tech/#author" },
+            "keywords": [
+              "Fishing OS",
+              "live rescue ISO",
+              "Arch Linux live ISO",
+              "live USB programmer",
+              "rescue USB",
+              "toolchain programmer",
+              "Linux portable",
+              "XFCE live desktop"
+            ]
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://fishingos.bangkah.tech/#webpage",
+            "url": "https://fishingos.bangkah.tech/",
+            "name": "Fishing OS — Live rescue ISO Arch Linux untuk programmer",
+            "description": "Live/rescue ISO berbasis Arch Linux untuk programmer. Boot dari USB atau mesin virtual dan langsung dapat editor, compiler, Python, Node.js, Go, git, Docker, dan desktop XFCE.",
+            "isPartOf": { "@id": "https://fishingos.bangkah.tech/#website" },
+            "inLanguage": "id-ID",
+            "dateModified": "2026-10-25",
+            "primaryImageOfPage": { "@id": "https://fishingos.bangkah.tech/#ogimage" },
+            "about": { "@id": "https://fishingos.bangkah.tech/#software" },
+            "author": { "@id": "https://fishingos.bangkah.tech/#author" },
+            "keywords": [
+              "Fishing OS",
+              "Arch Linux live ISO",
+              "rescue USB",
+              "live USB programmer",
+              "toolchain programmer",
+              "Docker",
+              "XFCE"
+            ]
+          },
+          {
+            "@type": "ImageObject",
+            "@id": "https://fishingos.bangkah.tech/#ogimage",
+            "url": "https://fishingos.bangkah.tech/og-image.jpg",
+            "contentUrl": "https://fishingos.bangkah.tech/og-image.jpg",
+            "width": 1200,
+            "height": 630,
+            "caption": "Fishing OS — live rescue ISO dengan desktop XFCE dan perkakas programmer"
+          },
+          {
+            "@type": "Person",
+            "@id": "https://fishingos.bangkah.tech/#author",
+            "name": "Muhammad Dhiyaul Atha",
+            "alternateName": "Bangkah",
+            "url": "https://github.com/Bangkahdev",
+            "sameAs": ["https://github.com/Bangkahdev"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://fishingos.bangkah.tech/#software",
+            "name": "Fishing OS",
+            "alternateName": "Fishing OS Live ISO",
+            "applicationCategory": "DeveloperApplication",
+            "applicationSubCategory": "Live rescue operating system",
+            "operatingSystem": "Arch Linux x86_64",
+            "softwareVersion": "2026.10.25",
+            "fileSize": "2000 MiB",
+            "memoryRequirements": "2 GB RAM",
+            "processorRequirements": "x86_64, BIOS atau UEFI",
+            "description": "Live/rescue ISO berbasis Arch Linux dengan editor, compiler, Python, Node.js, Go, git, Docker, kubectl, Helm, Terraform, Ansible, dan desktop XFCE.",
+            "url": "https://fishingos.bangkah.tech/",
+            "downloadUrl": "https://github.com/Bangkahdev/Fishing-OS/releases/latest",
+            "installUrl": "https://fishingos.bangkah.tech/#mulai",
+            "softwareHelp": "https://github.com/Bangkahdev/Fishing-OS#readme",
+            "releaseNotes": "https://github.com/Bangkahdev/Fishing-OS/releases",
+            "codeRepository": "https://github.com/Bangkahdev/Fishing-OS",
+            "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+            "author": { "@id": "https://fishingos.bangkah.tech/#author" },
+            "publisher": { "@id": "https://fishingos.bangkah.tech/#author" },
+            "isAccessibleForFree": true,
+            "dateModified": "2026-10-25",
+            "keywords": "live rescue ISO, Arch Linux live USB, toolchain programmer, Python, Node.js, Go, Docker, XFCE, portable dev environment",
+            "featureList": [
+              "Live rescue ISO tanpa instalasi",
+              "Desktop XFCE dan konsol zsh",
+              "Editor, compiler, Python, Node.js, Go",
+              "Toolchain DevOps tambahan: Docker, kubectl, Helm, Terraform, Ansible",
+              "Dukungan Ethernet, WWAN, dan Wi-Fi",
+              "ISO ditandatangani GPG dengan checksum SHA-256",
+              "Boot BIOS dan UEFI"
+            ],
+            "screenshot": [
+              {
+                "@type": "ImageObject",
+                "url": "https://fishingos.bangkah.tech/screenshots/01-boot-menu.png",
+                "caption": "Menu boot Fishing OS dengan entri live, memtest86+, dan HDT"
+              },
+              {
+                "@type": "ImageObject",
+                "url": "https://fishingos.bangkah.tech/screenshots/02-desktop.png",
+                "caption": "Desktop XFCE Fishing OS setelah autologin sebagai liveuser"
+              },
+              {
+                "@type": "ImageObject",
+                "url": "https://fishingos.bangkah.tech/screenshots/03-fishing-check.png",
+                "caption": "fishing-check menampilkan versi perkakas programmer"
+              },
+              {
+                "@type": "ImageObject",
+                "url": "https://fishingos.bangkah.tech/screenshots/04-fastfetch.png",
+                "caption": "fastfetch menampilkan ringkasan sistem live"
+              },
+              {
+                "@type": "ImageObject",
+                "url": "https://fishingos.bangkah.tech/screenshots/05-htop.png",
+                "caption": "htop memantau proses di Fishing OS live"
+              },
+              {
+                "@type": "ImageObject",
+                "url": "https://fishingos.bangkah.tech/screenshots/06-firefox.png",
+                "caption": "Firefox terbuka di desktop XFCE Fishing OS"
+              },
+              {
+                "@type": "ImageObject",
+                "url": "https://fishingos.bangkah.tech/screenshots/07-terminal-tools.png",
+                "caption": "Skrip Fishing OS dan perkakas terminal siap dipakai"
+              }
+            ],
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock"
+            }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://fishingos.bangkah.tech/#faq",
+            "isPartOf": { "@id": "https://fishingos.bangkah.tech/#webpage" },
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Apakah data saya tersimpan?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Tidak. Fishing OS adalah live medium: semua perubahan hilang setelah reboot. Installer ke disk belum ada dan direncanakan pada fase berikutnya."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Bagaimana dengan keamanan kredensial?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "root dan liveuser tanpa password adalah perilaku bawaan live medium, dan sshd aktif sejak boot. Jangan pakai di jaringan yang tidak tepercaya tanpa mengganti kredensial. User dev yang dibuat fishing-setup memakai password yang kamu tentukan."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Kenapa Secure Boot harus dimatikan?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Bootloader pada ISO belum ditandatangani untuk Secure Boot. Matikan Secure Boot di firmware sebelum boot dari USB."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Berapa besar ISO dan kenapa dibatasi?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Batas 2000 MiB mengikuti batas berkas GitHub Releases. Desktop XFCE dan Firefox masih muat di dalam batas ini."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Apakah ada repositori paket sendiri?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Tidak. pacman memakai mirror Arch Linux resmi, jadi paket tambahan mengikuti ketersediaan di Arch."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Apakah Ansible lengkap?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yang dibawa adalah ansible-core tanpa koleksi lengkap agar ISO tetap kecil. Pasang koleksi yang dibutuhkan dengan ansible-galaxy collection install."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
     <script>
       (function () {
         try {
