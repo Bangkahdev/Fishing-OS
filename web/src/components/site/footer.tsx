@@ -89,7 +89,14 @@ export function Footer() {
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground/60">
           Tidak berafiliasi dengan Arch Linux. "Arch Linux" adalah merek milik
-          pemegangnya masing-masing.
+          pemegangnya masing-masing. Bagian dari{" "}
+          <a
+            href="https://bangkah.tech"
+            className="underline decoration-border underline-offset-2 hover:text-foreground"
+          >
+            Bangkah
+          </a>
+          .
         </p>
       </div>
     </footer>
