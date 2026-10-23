@@ -4,34 +4,46 @@
 # ada di ISO tidak boleh ditampilkan sebagai "belum terpasang" (mis.
 # rustc dan java sengaja tidak disertakan agar ukuran ISO tetap di bawah
 # batas aset GitHub 2 GiB).
+#
+# Setiap alat punya perintah versinya sendiri dan dibungkus timeout agar
+# tidak ada yang menggantung menunggu jaringan (mis. kubectl yang mencoba
+# menghubungi API server saat dipanggil tanpa --client).
 
 echo "===== Fishing OS - Alat Pemrograman Tersedia ====="
 echo
 
 check() {
-    if command -v "$1" >/dev/null 2>&1; then
-        printf "%-18s %s\n" "$1" "$("$1" --version 2>/dev/null | head -n1 || "$1" version 2>/dev/null | head -n1)"
-    else
-        printf "%-18s %s\n" "$1" "(belum terpasang)"
+    local cmd="$1"
+    local args="$2"
+    local out
+
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        printf "%-18s %s\n" "$cmd" "(belum terpasang)"
+        return
     fi
+
+    # shellcheck disable=SC2086
+    out=$(timeout 8 "$cmd" $args 2>&1 | head -n1)
+    [ -n "$out" ] || out="(versi tidak terbaca)"
+    printf "%-18s %s\n" "$cmd" "$out"
 }
 
-check git
-check gh
-check docker
-check docker-compose
-check kubectl
-check helm
-check terraform
-check ansible
-check python3
-check node
-check go
-check make
-check cmake
-check gcc
-check jq
-check ssh
+check git            "--version"
+check gh             "--version"
+check docker         "--version"
+check docker-compose "version"
+check kubectl        "version --client"
+check helm           "version --short"
+check terraform      "version"
+check ansible        "--version"
+check python3        "--version"
+check node           "--version"
+check go             "version"
+check make           "--version"
+check cmake          "--version"
+check gcc            "--version"
+check jq             "--version"
+check ssh            "-V"
 
 echo
-echo "Selamat ngoding! 🎣"
+echo "Selamat ngoding!"

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Fishing OS Wallpaper
+Comment=Terapkan wallpaper Fishing OS pada semua monitor
+Exec=/usr/local/bin/fishing-wallpaper
+OnlyShowIn=XFCE;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
