@@ -31,11 +31,15 @@ jobs:
           shellcheck -S warning \
             tests/test_iso.sh \
             tests/check_bootmenu.sh \
+            tests/check_lightdm.sh \
             profile/profiledef.sh \
             profile/airootfs/usr/local/bin/fishing-*
 
       - name: Check boot menu defaults
         run: bash tests/check_bootmenu.sh
+
+      - name: Check LightDM autologin has no artificial delay
+        run: bash tests/check_lightdm.sh
 
       - name: Check systemd .wants entries are symlinks
         run: |
