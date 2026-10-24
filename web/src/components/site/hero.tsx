@@ -23,7 +23,7 @@ export function Hero() {
       id="atas"
       className="relative overflow-x-clip border-b border-border/60 bg-accent/25 dark:bg-accent/15"
     >
-      <div className="mx-auto grid w-full gap-10 px-4 pt-14 pb-14 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:px-12 lg:pt-20 lg:pb-20">
+      <div className="grid w-full gap-10 px-4 pt-14 pb-14 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:px-12 lg:pt-20 lg:pb-20">
         <div className="min-w-0">
           <h1 className="text-[2.35rem] leading-[1.06] font-semibold tracking-tight text-balance sm:text-5xl lg:text-[3.6rem]">
             Satu USB, semua alat programmer siap pakai.

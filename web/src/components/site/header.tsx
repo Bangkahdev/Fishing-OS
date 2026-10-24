@@ -42,7 +42,7 @@ export function Header() {
           scrolled && "glass border-border/60"
         )}
       >
-        <div className="mx-auto flex h-16 w-full items-center gap-3 px-4 sm:px-8 lg:px-12">
+        <div className="flex h-16 w-full items-center gap-3 px-4 sm:px-8 lg:px-12">
           <a href="#atas" className="shrink-0 rounded-md" aria-label="Fishing OS">
             <Logo />
           </a>

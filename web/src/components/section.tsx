@@ -27,8 +27,8 @@ export function Section({
         className
       )}
     >
-      <div className="mx-auto w-full px-4 sm:px-8 lg:px-12">
-        <div className="max-w-3xl">
+      <div className="w-full px-4 sm:px-8 lg:px-12">
+        <div className="w-full">
           <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-[2.1rem]">
             {title}
           </h2>
@@ -38,7 +38,7 @@ export function Section({
             </p>
           )}
         </div>
-        <div className="mt-9">{children}</div>
+        <div className="mt-9 w-full">{children}</div>
       </div>
     </section>
   )
