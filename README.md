@@ -55,9 +55,9 @@ Setiap rilis berisi:
 
 **Selalu verifikasi ISO sebelum dipakai.** Rilis ditandatangani oleh kunci CI
 Fishing OS. Kunci publiknya tersedia di dua tempat: aset `ci-key.asc` pada
-halaman rilis, dan berkas [`ci-key.asc`](ci-key.asc) di repo ini. (WKD untuk
-domain `mdhiyaulatha.me` belum dikonfigurasi, jadi `gpg --locate-keys` tidak
-bisa dipakai.)
+halaman rilis, dan berkas [`ci-key.asc`](ci-key.asc) di repo ini. WKD aktif
+sebagai jalur utama (`gpg --auto-key-locate clear,wkd --locate-keys bangkah@mdhiyaulatha.me`),
+dan `ci-key.asc` sebagai cadangan.
 
 | | |
 |---|---|
