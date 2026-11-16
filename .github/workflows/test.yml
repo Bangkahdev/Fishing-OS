@@ -1,0 +1,94 @@
+﻿---
+name: Test Fishing OS
+
+# Pipeline tes: whitebox (statis/unit, cepat) dan blackbox (artefak rilis
+# yang sudah terbit + mirror R2). Dipanggil oleh ci.yml (push/PR) dan
+# release.yml (setelah rilis), serta bisa dijalankan manual atau berkala
+# untuk mendeteksi mirror/WKD yang rusak.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Tag rilis yang diverifikasi (kosong = rilis terbaru)
+        type: string
+        required: false
+        default: ''
+      verify_iso:
+        description: Unduh ISO penuh dari mirror dan cocokkan sha256
+        type: boolean
+        required: false
+        default: false
+      blackbox:
+        description: Jalankan verifikasi blackbox
+        type: boolean
+        required: false
+        default: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag rilis yang diverifikasi (kosong = rilis terbaru)
+        type: string
+        required: false
+        default: ''
+      verify_iso:
+        description: Unduh ISO penuh dari mirror dan cocokkan sha256
+        type: boolean
+        required: false
+        default: false
+      blackbox:
+        description: Jalankan verifikasi blackbox
+        type: boolean
+        required: false
+        default: true
+  schedule:
+    - cron: '0 5 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  whitebox:
+    name: Whitebox (statis + unit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: archlinux:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm bash findutils gawk
+
+      - name: 'Installer: paket, skrip, dan entri desktop'
+        run: bash tests/check_installer.sh
+
+      - name: 'Boot menu: default dan include konsisten'
+        run: bash tests/check_bootmenu.sh
+
+      - name: 'LightDM: autologin tanpa delay buatan'
+        run: bash tests/check_lightdm.sh
+
+  blackbox:
+    name: Blackbox (rilis + mirror)
+    if: ${{ inputs.blackbox || github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl jq gnupg
+
+      - name: Verify published release, signatures, and mirror
+        env:
+          TAG: ${{ inputs.tag }}
+          VERIFY_ISO: ${{ inputs.verify_iso && '1' || '0' }}
+        run: bash tests/check_release.sh

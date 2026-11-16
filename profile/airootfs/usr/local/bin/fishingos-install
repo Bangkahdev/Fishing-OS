@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+# fishingos-install - Pasang Fishing OS ke disk dari sesi LiveOS.
+#
+# Dua cara memakai Fishing OS:
+#   * LiveOS    : boot dari ISO dan bekerja tanpa menyentuh disk (aman dicoba).
+#   * Terpasang : jalankan skrip ini (atau menu "Pasang Fishing OS") untuk
+#                 menyalin sistem ke disk agar dipakai harian.
+#
+# Skrip ini pembungkus tipis archinstall: ia memeriksa prasyarat, menjelaskan
+# apa yang akan terjadi, lalu menyerahkan pemilihan disk ke archinstall.
+#
+# Pemakaian:
+#   sudo fishingos-install            # jalankan installer
+#   sudo fishingos-install --yes      # tanpa konfirmasi awal
+#   fishingos-install --check         # laporkan prasyarat (tanpa root)
+#   fishingos-install --dry-run       # tampilkan perintah, tanpa menjalankan
+#   fishingos-install --help
+
+set -euo pipefail
+
+readonly SELF="${0##*/}"
+readonly ARCHINSTALL_BIN="archinstall"
+
+ASSUME_YES=0
+MODE="install"
+
+usage() {
+    cat <<EOF
+$SELF - pasang Fishing OS ke disk
+
+Fishing OS bisa dipakai sebagai LiveOS (coba tanpa instal) atau dipasang
+ke disk lewat archinstall untuk pemakaian harian.
+
+Pilihan:
+  --check     Periksa prasyarat dan keluar (tidak butuh root)
+  --dry-run   Tampilkan perintah installer tanpa menjalankannya
+  -y, --yes   Lewati konfirmasi awal
+  -h, --help  Tampilkan bantuan ini
+
+Tanpa pilihan, skrip menjalankan archinstall setelah konfirmasi.
+Peringatan: instalasi menulis ke disk dan dapat menghapus data.
+EOF
+}
+
+while (( $# > 0 )); do
+    case "$1" in
+        --check) MODE="check" ;;
+        --dry-run) MODE="dry-run" ;;
+        -y|--yes) ASSUME_YES=1 ;;
+        -h|--help) usage; exit 0 ;;
+        *)
+            printf '%s: argumen tidak dikenal: %s\n\n' "$SELF" "$1" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+    shift
+done
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+firmware_type() {
+    if [[ -d /sys/firmware/efi ]]; then
+        printf 'UEFI'
+    else
+        printf 'BIOS'
+    fi
+}
+
+# Alat yang wajib ada agar archinstall bisa mempartisi dan memformat disk.
+REQUIRED_TOOLS=(archinstall parted mkfs.fat mkfs.ext4)
+# mkfs.fat disediakan dosfstools; mkfs.ext4 oleh e2fsprogs.
+REQUIRED_PACKAGES=(archinstall arch-install-scripts parted dosfstools e2fsprogs)
+
+report_prerequisites() {
+    local rc=0 tool
+    printf '== Prasyarat Fishing OS Installer ==\n'
+    printf 'Firmware : %s\n' "$(firmware_type)"
+    if [[ -d /run/archiso ]]; then
+        printf 'Sesi     : LiveOS (media ISO)\n'
+    else
+        printf 'Sesi     : bukan LiveOS (dijalankan dari sistem terpasang)\n'
+    fi
+    for tool in "${REQUIRED_TOOLS[@]}"; do
+        if have "$tool"; then
+            printf '  [ok]      %s\n' "$tool"
+        else
+            printf '  [hilang]  %s\n' "$tool"
+            rc=1
+        fi
+    done
+    if (( rc != 0 )); then
+        printf '\nPaket yang diperlukan: %s\n' "${REQUIRED_PACKAGES[*]}"
+        printf 'Pasang dengan: pacman -S --needed %s\n' "${REQUIRED_PACKAGES[*]}"
+    fi
+    return "$rc"
+}
+
+case "$MODE" in
+    check)
+        # Mode laporan: selalu keluar 0 supaya bisa dipakai tes/diagnosa.
+        report_prerequisites || true
+        exit 0
+        ;;
+    dry-run)
+        printf 'Perintah yang akan dijalankan:\n'
+        printf '  %s\n' "$ARCHINSTALL_BIN"
+        printf 'Firmware terdeteksi: %s\n' "$(firmware_type)"
+        exit 0
+        ;;
+esac
+
+if (( EUID != 0 )); then
+    if have sudo; then
+        exec sudo -- "$0" "$@"
+    fi
+    printf '%s: installer harus dijalankan sebagai root (atau lewat sudo).\n' "$SELF" >&2
+    exit 1
+fi
+
+if ! report_prerequisites; then
+    printf '\nInstalasi dibatalkan: prasyarat belum lengkap.\n' >&2
+    exit 1
+fi
+
+cat <<'EOF'
+
+Instalasi akan menulis ke disk yang kamu pilih dan dapat menghapus data di
+dalamnya. Pastikan data penting sudah dicadangkan.
+
+Langkah di archinstall:
+  1. Pilih "Disk configuration" lalu partisi disk tujuan.
+  2. Pilih "Profile" > "Desktop" > XFCE bila ingin tampilan seperti LiveOS.
+  3. Tambahkan user harian; jangan memakai user live.
+  4. Setelah selesai, lepas media instalasi dan reboot.
+
+EOF
+
+if (( ! ASSUME_YES )); then
+    read -r -p "Lanjutkan ke archinstall? [y/N]: " answer
+    case "$answer" in
+        [yY]|[yY][eE][sS]) ;;
+        *) printf 'Dibatalkan.\n'; exit 0 ;;
+    esac
+fi
+
+exec "$ARCHINSTALL_BIN"

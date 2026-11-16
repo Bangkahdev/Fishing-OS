@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Pasang Fishing OS
+GenericName=Installer
+Comment=Salin Fishing OS ke disk untuk dipakai harian
+Exec=pkexec /usr/local/bin/fishingos-install
+TryExec=/usr/local/bin/fishingos-install
+Icon=system-software-install
+Terminal=true
+Categories=System;Settings;
+Keywords=install;pasang;setup;archinstall;

@@ -32,14 +32,20 @@ jobs:
             tests/test_iso.sh \
             tests/check_bootmenu.sh \
             tests/check_lightdm.sh \
+            tests/check_installer.sh \
+            tests/check_release.sh \
             profile/profiledef.sh \
-            profile/airootfs/usr/local/bin/fishing-*
+            profile/airootfs/usr/local/bin/fishing-* \
+            profile/airootfs/usr/local/bin/fishingos-install
 
       - name: Check boot menu defaults
         run: bash tests/check_bootmenu.sh
 
       - name: Check LightDM autologin has no artificial delay
         run: bash tests/check_lightdm.sh
+
+      - name: Check installer wiring (packages, script, desktop entries)
+        run: bash tests/check_installer.sh
 
       - name: Check systemd .wants entries are symlinks
         run: |
