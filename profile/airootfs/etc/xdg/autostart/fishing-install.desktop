@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Fishing OS Installer
+Comment=Buka installer saat boot dengan parameter fishing.install=1
+Exec=/usr/local/bin/fishing-install-launcher
+OnlyShowIn=XFCE;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

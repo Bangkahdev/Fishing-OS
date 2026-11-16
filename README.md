@@ -135,9 +135,31 @@ seluruh isinya. Di Windows gunakan Rufus dengan mode **DD Image**, atau Ventoy.
 **Secure Boot harus dimatikan** di firmware, karena bootloader belum
 ditandatangani untuk Secure Boot.
 
-Menu boot menyediakan entri live, opsi `with speech` (pembaca layar), memtest86+,
-dan HDT (informasi perangkat keras). Setelah login, LightDM masuk otomatis ke
-sesi XFCE sebagai `liveuser`.
+Menu boot menyediakan dua jalur: **LiveOS** (coba tanpa menyentuh disk, pilihan
+default) dan **Installer to disk** (memasang Fishing OS ke disk untuk pemakaian
+harian). Entri lain: `with speech` (pembaca layar), memtest86+, dan HDT
+(informasi perangkat keras). Setelah login, LightDM masuk otomatis ke sesi XFCE
+sebagai `liveuser`.
+
+### LiveOS atau pasang ke disk
+
+| Pilihan | Kapan dipakai |
+|---|---|
+| **LiveOS** (default) | Mencoba, memperbaiki sistem yang rusak, atau bekerja tanpa menyentuh disk. Semua perubahan hilang saat reboot. |
+| **Installer to disk** | Ingin Fishing OS sebagai sistem harian. Boot entri ini, installer `archinstall` terbuka otomatis di sesi live. |
+
+Installer juga bisa dibuka dari desktop lewat ikon **Pasang Fishing OS**, atau
+dari terminal:
+
+```bash
+sudo fishingos-install          # installer interaktif
+fishingos-install --check       # laporkan prasyarat tanpa root
+fishingos-install --dry-run     # lihat perintah yang akan dijalankan
+```
+
+Di dalam archinstall pilih disk tujuan, profil desktop **XFCE** bila ingin
+tampilan seperti LiveOS, dan buat user harian (jangan memakai `liveuser`).
+Instalasi menulis ke disk dan dapat menghapus data di dalamnya.
 
 ---
 
