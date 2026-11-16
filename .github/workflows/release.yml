@@ -1,4 +1,4 @@
----
+﻿---
 name: Release Fishing OS
 
 on:
@@ -49,7 +49,7 @@ jobs:
           GPG_USER="bangkah@mdhiyaulatha.me"
 
           # Fail-closed: prasyarat identitas kunci WAJIB terpenuhi. Tanpa ini,
-          # tanda tangan tidak menambah kepercayaan apa pun (docs/SRS.md §3.3).
+          # tanda tangan tidak menambah kepercayaan apa pun (docs/SRS.md Â§3.3).
           if [[ -z "${EXPECTED_FPR:-}" ]]; then
             echo "::error::vars.GPG_FINGERPRINT kosong, verifikasi fingerprint dilewati. Kunci apa pun yang tersimpan di GPG_PRIVATE_KEY bisa menandatangani rilis. Tetapkan repository variable GPG_FINGERPRINT terlebih dahulu."
             exit 1
@@ -264,7 +264,10 @@ jobs:
             --header-upload "Cache-Control: public, max-age=31536000, immutable"; then
             echo "::warning::Gagal mengunggah artefak ke Cloudflare R2; rilis tetap diterbitkan di GitHub"
             echo "uploaded=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            # Job-level continue-on-error menjaga rilis GitHub tetap jalan,
+            # tetapi job harus tampil gagal agar kredensial R2 yang rusak
+            # tidak tersembunyi di balik status hijau.
+            exit 1
           fi
 
           {
@@ -278,7 +281,7 @@ jobs:
             --header-upload "Cache-Control: public, max-age=300"; then
             echo "::warning::Manifest mirror gagal; tautan mirror tidak ditambahkan"
             echo "uploaded=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            exit 1
           fi
 
           rclone ls "${dest}" | sort
@@ -391,3 +394,15 @@ jobs:
           fi
           echo "::error::GitHub gagal dan mirror R2 tidak tersedia; rilis tidak terpublikasi."
           exit 1
+
+  # Blackbox terhadap artefak yang benar-benar terbit: aset GitHub, rantai
+  # tanda tangan, dan mirror R2. Kegagalan di sini berarti pengguna tidak bisa
+  # memverifikasi unduhan, jadi rilis ditandai gagal.
+  verify:
+    name: Verifikasi rilis terbit
+    needs: release
+    if: needs.release.result == 'success'
+    uses: ./.github/workflows/test.yml
+    with:
+      tag: ${{ github.ref_name }}
+      blackbox: true

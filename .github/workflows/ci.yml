@@ -19,8 +19,17 @@ jobs:
   lint:
     uses: ./.github/workflows/lint.yml
 
+  # Whitebox selalu; blackbox hanya pada push ke main agar PR tetap cepat
+  # dan tidak bergantung pada ketersediaan jaringan ke mirror.
+  # Job ini melaporkan kondisi nyata (rilis/mirror) dan sengaja TIDAK menjadi
+  # prasyarat build: ISO harus tetap bisa dibangun walau mirror sedang rusak.
+  test:
+    uses: ./.github/workflows/test.yml
+    with:
+      blackbox: ${{ github.event_name == 'push' }}
+
   build:
-    needs: lint
+    needs: [lint]
     uses: ./.github/workflows/build.yml
     with:
       retention-days: 14
