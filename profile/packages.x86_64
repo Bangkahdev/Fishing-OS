@@ -116,6 +116,15 @@ gzip
 bzip2
 xz
 zstd
+# Installer (LiveOS -> sistem terpasang)
+archinstall
+arch-install-scripts
+parted
+dosfstools
+e2fsprogs
+btrfs-progs
+ntfs-3g
+exfatprogs
 memtest86+
 memtest86+-efi
 edk2-shell
