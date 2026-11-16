@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# fishing-install-launcher - buka installer Fishing OS.
+#
+# Dipakai dua cara:
+#   * Autostart: saat boot memilih "Fishing OS installer" (kernel param
+#     fishing.install=1), launcher ini dijalankan sesi XFCE dan langsung
+#     membuka terminal berisi installer. Boot "live" tidak terpengaruh.
+#   * Manual: entri "Pasang Fishing OS" memanggilnya dengan --force.
+#
+# Installer dijalankan lewat sudo tanpa kata sandi, sesuai aturan
+# /etc/sudoers.d/99-liveuser untuk liveuser.
+
+set -euo pipefail
+
+readonly MARKER="fishing.install=1"
+readonly INSTALLER="/usr/local/bin/fishingos-install"
+
+FORCE=0
+case "${1:-}" in
+    --force) FORCE=1 ;;
+    -h|--help)
+        printf '%s [--force]\n\n--force  buka installer tanpa cek parameter boot\n' "${0##*/}"
+        exit 0
+        ;;
+esac
+
+if (( ! FORCE )); then
+    if [[ ! -r /proc/cmdline ]]; then
+        exit 0
+    fi
+    boot_cmdline="$(cat /proc/cmdline 2>/dev/null || true)"
+    if [[ " ${boot_cmdline} " != *" ${MARKER} "* ]]; then
+        exit 0
+    fi
+fi
+
+# Sesuaikan izin terminal agar bisa membuka jendela saat autostart.
+if command -v xfce4-terminal >/dev/null 2>&1; then
+    exec xfce4-terminal --maximize --title "Pasang Fishing OS" --hold \
+        --command "sudo -n ${INSTALLER}"
+fi
+
+# Fallback: jalankan di terminal yang sudah ada (mis. dari konsol).
+exec sudo -n "${INSTALLER}"
