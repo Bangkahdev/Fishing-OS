@@ -165,7 +165,8 @@ check_desktop() {
     done
 
     if [[ -f "$SKEL_DESKTOP" && -f "$MENU_DESKTOP" ]]; then
-        if cmp -s "$SKEL_DESKTOP" "$MENU_DESKTOP"; then
+        if [[ "$(sha256sum "$SKEL_DESKTOP" | awk '{print $1}')" == \
+            "$(sha256sum "$MENU_DESKTOP" | awk '{print $1}')" ]]; then
             pass_msg "entri skel dan menu identik"
         else
             err "entri skel dan menu berbeda isi"
