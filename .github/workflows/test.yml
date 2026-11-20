@@ -62,7 +62,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install dependencies
-        run: pacman -Syu --noconfirm bash findutils gawk
+        run: pacman -Syu --noconfirm bash findutils gawk python
 
       - name: 'Installer: paket, skrip, dan entri desktop'
         run: bash tests/check_installer.sh
@@ -72,6 +72,11 @@ jobs:
 
       - name: 'LightDM: autologin tanpa delay buatan'
         run: bash tests/check_lightdm.sh
+
+      - name: 'Agent: unit test Tahap 1-2'
+        run: |
+          cd agent
+          python -m unittest discover -s tests -v
 
   blackbox:
     name: Blackbox (rilis + mirror)
