@@ -12,7 +12,7 @@ Tanggal pemeriksaan terakhir: 21 November 2026.
 | Fase SRS | Status | Bukti |
 |---|---|---|
 | Phase 0 — integrasi OS | Sebagian | Struktur `agent/` dan CI test sudah ada; paket resmi dan installer optional belum terintegrasi. |
-| Phase 1 — control plane | Fondasi selesai | `service.py`, `task.py`, `policy.py`, `trace.py`, cancellation, dan 55 unit test. |
+| Phase 1 — control plane | Fondasi selesai | `service.py`, `task.py`, `policy.py`, `trace.py`, cancellation, IPC local, dan 56 unit test. |
 | Phase 2 — command/system capability | Fondasi selesai | `command.py`, `files.py`, `system.py`, privilege gate, dan audit redaction. |
 | Phase 3 — productivity | Fondasi selesai | `productivity.py` untuk Markdown, CSV, dan PPTX OOXML minimal. |
 | Phase 4 — desktop automation | Fondasi sebagian | Backend X11/Wayland dan aksi atomik tersedia; AT-SPI2, screenshot, dan verifikasi visual belum tersedia. |
@@ -29,6 +29,7 @@ Tanggal pemeriksaan terakhir: 21 November 2026.
 | `policy.py` | Risk classification, approval, dan Administrator Mode tanpa menyimpan password. |
 | `task.py` | State machine task yang dipakai control plane. |
 | `service.py` | Registry task, transisi state, approval, cancellation, dan event audit bersama interface. |
+| `ipc.py` | JSON-line Unix-domain socket client/server untuk mengakses `ControlService` secara lokal. |
 | `trace.py` | JSONL audit lokal dan redaksi field credential. |
 | `files.py` | File operation system-wide, batas ukuran, canonical path lexical, dan perlindungan symlink. |
 | `system.py` | Adapter package, service, process, network, storage, dan hardware melalui command contract. |
@@ -49,6 +50,11 @@ python -m fishing_agent file metadata C:\Windows\System32\notepad.exe
 python -m fishing_agent system network status --lab C:\temp\fishing-lab
 python -m fishing_agent productivity pptx demo.pptx --slides "[{\"title\":\"Demo\",\"body\":\"Fishing OS\"}]"
 ```
+
+IPC Unix-domain socket tersedia melalui `ControlIPCServer` dan
+`ControlIPCClient`. Endpoint hanya dibuat pada path lokal dengan permission
+user-only (`0700` untuk parent dan `0600` untuk socket); Windows melewati test
+transport karena target produk adalah Fishing OS/Linux.
 
 ### Aturan keamanan yang sudah dikunci
 
@@ -81,8 +87,7 @@ CI menjalankan suite ini melalui job `whitebox` di
 
 ## Pekerjaan berikutnya
 
-1. Tambahkan IPC lokal berpermission ketat agar GUI dan CLI memakai
-   `ControlService` lintas proses.
+1. Tambahkan adapter GUI/TUI yang memakai IPC lokal dan bukan executor sendiri.
 2. Tambahkan Model Manager dengan manifest, checksum, load/unload, fallback CPU,
    dan status OOM/timeout.
 3. Tambahkan AT-SPI2 serta screenshot Wayland/Hyprland dengan verifikasi target.
