@@ -278,6 +278,10 @@ dengan `fishing.test=1`, lalu mewajibkan penanda `FISHING-SMOKETEST: PASS` dari
 │   └── grub/                  Konfigurasi GRUB
 ├── tests/                     check_bootmenu.sh, test_iso.sh
 ├── docs/SRS.md                Spesifikasi kebutuhan perangkat lunak
+├── docs/COMPUTER_USE_ASSISTANT_IMPLEMENTATION.md
+│                               Status fase, arsitektur modul, dan panduan maintenance
+├── docs/SRS-agent.md          Draft legacy; requirement kanonik ada di SRS.md
+├── agent/                     fishing-agent: control plane dan capability lokal
 └── .github/workflows/         Pipeline CI/CD
 ```
 
