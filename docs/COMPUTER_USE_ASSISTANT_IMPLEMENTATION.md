@@ -1,6 +1,7 @@
 # Fishing OS Computer-Use Assistant — Catatan Implementasi
 
-Dokumen ini melengkapi [SRS.md](./SRS.md). SRS menetapkan perilaku produk;
+Dokumen ini melengkapi [SRS.md](./SRS.md) dan
+[SRS-agent-v1.1.md](./SRS-agent-v1.1.md). SRS menetapkan perilaku produk;
 dokumen ini mencatat apa yang sudah diimplementasikan, lokasi kode, cara
 verifikasi, dan pekerjaan yang masih tersisa. Perbarui dokumen ini setiap kali
 status fase atau kontrak publik berubah.
