@@ -8,7 +8,7 @@ status fase atau kontrak publik berubah.
 
 ## Status ringkas
 
-Tanggal pemeriksaan terakhir: 21 November 2026.
+Tanggal pemeriksaan terakhir: 22 November 2026.
 
 | Fase SRS | Status | Bukti |
 |---|---|---|
@@ -19,7 +19,7 @@ Tanggal pemeriksaan terakhir: 21 November 2026.
 | Phase 4 — desktop automation | Fondasi sebagian | Backend X11/Wayland, aksi atomik, penelusuran dan aksi AT-SPI2 via pyatspi, screenshot grim/import, verifikasi pasca-aksi, serta aksi skrip `ui_action`; uji pada sesi Hyprland Fishing OS belum. |
 | Phase 5 — hybrid AI | Fondasi selesai | `model_manager.py`: manifest, checksum SHA-256, verifikasi detached signature GPG, load/unload, status OOM/missing; runtime inferensi dan pilihan model belum dikunci. |
 | Phase 6 — GUI/TUI | Belum | CLI tersedia; GUI/TUI dan IPC lintas-proses belum tersedia. |
-| Phase 7 — release hardening | Belum | Paket Fishing OS, installer option, signature/model manifest, dan audit Live ISO belum terintegrasi. |
+| Phase 7 — release hardening | Sebagian | Paket/model signing dan audit Live ISO tersedia; paket resmi, installer option, dan release matrix masih perlu integrasi. |
 
 ## Struktur modul
 
@@ -40,6 +40,7 @@ Tanggal pemeriksaan terakhir: 21 November 2026.
 | `screenshot.py` | Tangkapan layar grim (Wayland/Hyprland) atau import (X11) dengan status tidak tersedia. |
 | `verification.py` | Verifikasi state sebelum/sesudah aksi, termasuk perubahan yang diharapkan. |
 | `model_manager.py` | Manifest model, verifikasi checksum dan signature GPG, load/unload, dan status OOM/missing. |
+| `package_audit.py` | Audit filesystem hasil ekstraksi Live ISO untuk paket, launcher, service, dan model Assistant terlarang. |
 | `stop.py` | Cancellation melalui event, signal, atau stop file. |
 | `cli.py` | Interface CLI untuk seluruh kapabilitas fondasi. |
 
@@ -99,7 +100,7 @@ transport karena target produk adalah Fishing OS/Linux.
 
 ## Verifikasi
 
-Test suite saat ini berisi 109 test yang mencakup command contract, policy, task
+Test suite saat ini berisi 119 test yang mencakup command contract, policy, task
 state, service, filesystem, system adapter, productivity output, action
 executor, trace, configuration, stop behavior, AT-SPI2, screenshot, verifikasi
 pasca-aksi, dan model manager termasuk signature GPG. Setiap perubahan modul
@@ -111,7 +112,9 @@ python -m unittest discover -s tests -v
 ```
 
 CI menjalankan suite ini melalui job `whitebox` di
-`.github/workflows/test.yml`.
+`.github/workflows/test.yml`. Build ISO mengekstrak
+`arch/x86_64/airootfs.sfs`, menjalankan `audit-iso` pada filesystem root,
+dan menghentikan rilis bila komponen Assistant ditemukan.
 
 ## Pekerjaan berikutnya
 

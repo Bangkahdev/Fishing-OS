@@ -107,6 +107,22 @@ class CliTest(unittest.TestCase):
         )
         self.assertEqual(code, 1)
 
+    def test_audit_iso_lulus(self):
+        tree = Path(self._tmp.name) / "iso"
+        (tree / "usr" / "bin").mkdir(parents=True)
+        (tree / "usr" / "bin" / "fsh").write_text("", encoding="utf-8")
+        code, out, _err = run_cli(["audit-iso", str(tree)])
+        self.assertEqual(code, 0)
+        self.assertIn("LULUS", out)
+
+    def test_audit_iso_gagal_saat_ada_komponen_assistant(self):
+        tree = Path(self._tmp.name) / "iso"
+        (tree / "usr" / "bin").mkdir(parents=True)
+        (tree / "usr" / "bin" / "fishing-assistant").write_text("", encoding="utf-8")
+        code, out, _err = run_cli(["audit-iso", str(tree)])
+        self.assertEqual(code, 1)
+        self.assertIn("GAGAL", out)
+
     def test_tanpa_lab_menghasilkan_exit_1(self):
         with mock.patch.dict(os.environ, {}, clear=True):
             code, _out, err = run_cli(["init"])

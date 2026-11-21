@@ -1,4 +1,4 @@
-"""CLI fishing-agent: control plane, kapabilitas, dan model lokal."""
+"""CLI fishing-agent: control plane, kapabilitas, model, dan audit distribusi."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from .executor import (
 )
 from .files import FileOperationError, FileTool, PathOutsideWorkspace, search
 from .model_manager import ModelError, ModelManager, load_manifests_from_file, verify_manifest_signature
+from .package_audit import audit_report, audit_tree
 from .stop import StopController, StopRequested
 from .trace import TraceWriter
 from .policy import AdministratorMode, PolicyGate
@@ -241,6 +242,12 @@ def _cmd_model(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _cmd_audit_iso(args: argparse.Namespace) -> int:
+    findings = audit_tree(args.path)
+    print(audit_report(args.path))
+    return EXIT_OK if not findings else EXIT_ERROR
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fishing-agent",
@@ -331,6 +338,10 @@ def build_parser() -> argparse.ArgumentParser:
     model.add_argument("--signature", help="detached signature GPG untuk manifest (opsional)")
     model.add_argument("--lab", help=f"akar lab (default: ${LAB_ENV})")
     model.set_defaults(func=_cmd_model)
+
+    audit = sub.add_parser("audit-iso", help="audit isi Live ISO yang sudah diekstrak")
+    audit.add_argument("path", help="direktori hasil ekstrak ISO")
+    audit.set_defaults(func=_cmd_audit_iso)
 
     stop = sub.add_parser("stop", help="tulis stop file agar loop berhenti")
     stop.add_argument("--lab", help=f"akar lab (default: ${LAB_ENV})")

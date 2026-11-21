@@ -143,3 +143,5 @@ python -m unittest discover -s tests -v
 ```
 
 Tes juga dijalankan pada job `whitebox` di `.github/workflows/test.yml`.
+Build ISO mengekstrak `airootfs.sfs` dan menjalankan `audit-iso` pada
+filesystem hasil ekstraksi sebelum artefak Live ISO diunggah.

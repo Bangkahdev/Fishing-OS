@@ -10,6 +10,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import tempfile
+import os
 from pathlib import Path
 
 
@@ -41,7 +42,12 @@ class ScreenshotCapture:
             raise ScreenshotUnavailable(
                 "tidak ada alat tangkapan layar (grim untuk Wayland/Hyprland atau import untuk X11)"
             )
-        target = Path(path) if path is not None else Path(tempfile.mkstemp(suffix=".png")[1])
+        if path is not None:
+            target = Path(path)
+        else:
+            fd, temporary = tempfile.mkstemp(suffix=".png")
+            os.close(fd)
+            target = Path(temporary)
         target.parent.mkdir(parents=True, exist_ok=True)
         try:
             if self.method == "grim":
@@ -50,6 +56,8 @@ class ScreenshotCapture:
                 subprocess.run(["import", "-window", "root", str(target)], check=True)
         except subprocess.CalledProcessError as exc:
             raise ScreenshotError(f"gagal menangkap layar melalui {self.method}: {exc}") from exc
+        except OSError as exc:
+            raise ScreenshotError(f"alat tangkapan layar tidak dapat dijalankan: {exc}") from exc
         if not target.is_file() or target.stat().st_size == 0:
             raise ScreenshotError(f"berkas tangkapan layar kosong: {target}")
         return target

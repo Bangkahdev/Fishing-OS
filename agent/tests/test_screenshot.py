@@ -45,12 +45,12 @@ class ScreenshotCaptureTest(unittest.TestCase):
     def test_capture_gagal_saat_berkas_kosong(self):
         with mock.patch("shutil.which", return_value="/usr/bin/grim"), mock.patch(
             "subprocess.run"
-        ), mock.patch("pathlib.Path.is_file", return_value=True), mock.patch(
-            "pathlib.Path.stat", return_value=mock.Mock(st_size=0)
         ):
             capture = ScreenshotCapture()
-            with self.assertRaises(ScreenshotError):
-                capture.capture()
+            with tempfile.TemporaryDirectory() as tmp:
+                target = Path(tmp) / "layar.png"
+                with self.assertRaises(ScreenshotError):
+                    capture.capture(target)
 
 
 if __name__ == "__main__":
