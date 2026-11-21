@@ -1,19 +1,22 @@
 # fishing-agent — Fondasi Computer-Use Assistant
 
-Fondasi lokal Fishing OS yang mengikuti [SRS utama](../docs/SRS.md) dan
+Fondasi lokal Fishing OS yang mengikuti [SRS utama](../docs/SRS.md),
+[SRS Assistant v1.1](../docs/SRS-agent-v1.1.md), dan
 [catatan implementasi](../docs/COMPUTER_USE_ASSISTANT_IMPLEMENTATION.md). Komponen
 ini berjalan sebagai user biasa dan menyediakan contract executor, policy gate,
-task state, audit redaction, cancellation, serta backend input desktop.
+task state, audit redaction, cancellation, backend input desktop, serta
+perception AT-SPI2 dan screenshot.
 
 Status saat ini:
 
 - [x] Phase 1 — lab, task state, policy/approval, audit, cancellation
 - [x] Phase 2 — command executor `argv`, `shell`, `script`, `interactive`
 - [x] Backend input desktop dan dry-run
-- [] Tahap 3 — pembaca AT-SPI2 + runtime model lokal (VLM)
-- [] Tahap 4 — tool dokumen & presentasi (`.pptx`)
-- [] Tahap 5 — interaksi UI kompleks (tabel, klik kanan, seleksi, font)
-- [] Tahap 6 — evaluasi & fine-tuning opsional
+- [x] Perception — penelusuran dan aksi AT-SPI2 via pyatspi, tangkapan layar grim/import, verifikasi state
+- [] Model manager dan runtime model lokal (VLM)
+- [] Tool dokumen & presentasi (`.pptx`)
+- [] Interaksi UI kompleks (tabel, klik kanan, seleksi, font)
+- [] Evaluasi & fine-tuning opsional
 
 ## Kebutuhan
 
@@ -64,7 +67,13 @@ Semua perintah menerima `--lab <path>` sebagai pengganti variabel lingkungan.
 | `key` | `keys` (mis. `ctrl+shift+t`) |
 | `wait` | `seconds` |
 | `sh` | `argv` (daftar string, tanpa shell) |
+| `ui_action` | `role`/`name`, `action` (opsional), `app_id` (opsional), `expected_change` (opsional), `verify` (default `true`) |
 | `notify` | `text` |
+
+`ui_action` memakai AT-SPI2 lebih dulu; bila elemen tidak ditemukan, aksi berhenti
+dengan error. Verifikasi sebelum/sesudah aksi wajib lulus kecuali
+`"verify": false` diberikan secara eksplisit; sumber grounding dicatat pada
+`perception` trace.
 
 `command` memakai mode `argv` secara default sehingga argumen tidak diparse
 shell. Gunakan mode `shell` atau `script` hanya bila memang diperlukan.
