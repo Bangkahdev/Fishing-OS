@@ -1,4 +1,4 @@
-"""CLI dasar fishing-agent (Tahap 1–2)."""
+"""CLI fishing-agent: control plane, kapabilitas, dan model lokal."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from .executor import (
     select_backend,
 )
 from .files import FileOperationError, FileTool, PathOutsideWorkspace, search
+from .model_manager import ModelError, ModelManager, load_manifests_from_file
 from .stop import StopController, StopRequested
 from .trace import TraceWriter
 from .policy import AdministratorMode, PolicyGate
@@ -213,10 +214,34 @@ def _cmd_productivity(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _cmd_model(args: argparse.Namespace) -> int:
+    lab = _lab(args).ensure()
+    manager = ModelManager(lab.models)
+    for manifest in load_manifests_from_file(args.manifest):
+        manager.register(manifest)
+    if args.operation == "list":
+        for model_id in manager.list_models():
+            print(f"{model_id}\t{manager.status(model_id)}")
+        return EXIT_OK
+    if not args.model_id:
+        raise ValueError(f"model {args.operation} membutuhkan model_id")
+    if args.operation == "verify":
+        ok = manager.verify(args.model_id)
+        print("checksum cocok" if ok else "checksum tidak cocok")
+        return EXIT_OK if ok else EXIT_ERROR
+    if args.operation == "load":
+        print(manager.load(args.model_id))
+    elif args.operation == "unload":
+        print(manager.unload(args.model_id))
+    else:
+        print(manager.status(args.model_id))
+    return EXIT_OK
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fishing-agent",
-        description="Asisten computer-use lokal Fishing OS (Tahap 1-2).",
+        description="Asisten computer-use lokal Fishing OS.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -296,6 +321,13 @@ def build_parser() -> argparse.ArgumentParser:
     productivity.add_argument("--slides", default="[]")
     productivity.set_defaults(func=_cmd_productivity)
 
+    model = sub.add_parser("model", help="kelola manifest dan status model lokal")
+    model.add_argument("operation", choices=("list", "verify", "load", "unload", "status"))
+    model.add_argument("model_id", nargs="?")
+    model.add_argument("--manifest", required=True, help="berkas manifest JSON model")
+    model.add_argument("--lab", help=f"akar lab (default: ${LAB_ENV})")
+    model.set_defaults(func=_cmd_model)
+
     stop = sub.add_parser("stop", help="tulis stop file agar loop berhenti")
     stop.add_argument("--lab", help=f"akar lab (default: ${LAB_ENV})")
     stop.set_defaults(func=_cmd_stop)
@@ -314,6 +346,7 @@ def main(argv: list[str] | None = None) -> int:
         ActionError,
         BackendUnavailable,
         FileOperationError,
+        ModelError,
         SystemToolError,
         ProductivityError,
         PathOutsideWorkspace,

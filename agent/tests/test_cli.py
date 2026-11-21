@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -63,6 +64,48 @@ class CliTest(unittest.TestCase):
         code, out, _err = run_cli(["search", "--lab", str(self.lab), "*.md"])
         self.assertEqual(code, 0)
         self.assertIn("materi.md", out)
+
+    def test_model_list_load_dan_verify(self):
+        content = b"model uji"
+        digest = hashlib.sha256(content).hexdigest()
+        manifest = Path(self._tmp.name) / "models.json"
+        manifest.write_text(
+            json.dumps({"models": [{"id": "m1", "version": "1", "checksum": digest}]}),
+            encoding="utf-8",
+        )
+        run_cli(["init", "--lab", str(self.lab)])
+        (self.lab / "models" / "m1-1").write_bytes(content)
+
+        code, out, err = run_cli(
+            ["model", "list", "--lab", str(self.lab), "--manifest", str(manifest)]
+        )
+        self.assertEqual(code, 0, err)
+        self.assertIn("m1", out)
+
+        code, out, err = run_cli(
+            ["model", "load", "m1", "--lab", str(self.lab), "--manifest", str(manifest)]
+        )
+        self.assertEqual(code, 0, err)
+        self.assertIn("loaded", out)
+
+        code, out, _err = run_cli(
+            ["model", "verify", "m1", "--lab", str(self.lab), "--manifest", str(manifest)]
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("cocok", out)
+
+    def test_model_verify_checksum_salah(self):
+        manifest = Path(self._tmp.name) / "models.json"
+        manifest.write_text(
+            json.dumps({"models": [{"id": "m1", "version": "1", "checksum": "salah"}]}),
+            encoding="utf-8",
+        )
+        run_cli(["init", "--lab", str(self.lab)])
+        (self.lab / "models" / "m1-1").write_bytes(b"isi")
+        code, _out, _err = run_cli(
+            ["model", "verify", "m1", "--lab", str(self.lab), "--manifest", str(manifest)]
+        )
+        self.assertEqual(code, 1)
 
     def test_tanpa_lab_menghasilkan_exit_1(self):
         with mock.patch.dict(os.environ, {}, clear=True):
