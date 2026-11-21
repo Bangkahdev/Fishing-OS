@@ -13,7 +13,8 @@ Status saat ini:
 - [x] Phase 2 — command executor `argv`, `shell`, `script`, `interactive`
 - [x] Backend input desktop dan dry-run
 - [x] Perception — penelusuran dan aksi AT-SPI2 via pyatspi, tangkapan layar grim/import, verifikasi state
-- [] Model manager dan runtime model lokal (VLM)
+- [x] Model manager — manifest, checksum, load/unload, status OOM
+- [] Runtime model lokal (VLM) dan benchmark hardware
 - [] Tool dokumen & presentasi (`.pptx`)
 - [] Interaksi UI kompleks (tabel, klik kanan, seleksi, font)
 - [] Evaluasi & fine-tuning opsional
@@ -41,6 +42,9 @@ python -m fishing_agent system network status
 python -m fishing_agent system packages list
 python -m fishing_agent productivity markdown laporan.md --title Laporan --content "Hasil"
 python -m fishing_agent productivity pptx presentasi.pptx --slides '[{"title":"Demo","body":"Fishing OS"}]'
+python -m fishing_agent model list --manifest models.json
+python -m fishing_agent model verify qwen2.5-vl-3b --manifest models.json
+python -m fishing_agent model load qwen2.5-vl-3b --manifest models.json
 ```
 
 Semua perintah menerima `--lab <path>` sebagai pengganti variabel lingkungan.
