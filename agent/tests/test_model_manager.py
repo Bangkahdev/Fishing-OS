@@ -14,7 +14,9 @@ from fishing_agent.model_manager import (
     ModelManifest,
     ModelNotFound,
     ModelVerificationFailed,
+    SignatureError,
     load_manifests_from_file,
+    verify_manifest_signature,
 )
 
 
@@ -127,6 +129,81 @@ class LoadManifestsFileTest(unittest.TestCase):
             manifests = load_manifests_from_file(path)
         self.assertEqual(len(manifests), 1)
         self.assertEqual(manifests[0].id, "a")
+
+
+class SignatureTest(unittest.TestCase):
+    FINGERPRINT = "69AA973A33A3930BB1C83850F713BCD7D6E8F591"
+
+    class FakeCompleted:
+        def __init__(self, returncode=0, stdout="", stderr=""):
+            self.returncode = returncode
+            self.stdout = stdout
+            self.stderr = stderr
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self._tmp.name)
+        self.manifest = self.dir / "models.json"
+        self.manifest.write_text("[]", encoding="utf-8")
+        self.signature = self.dir / "models.json.sig"
+        self.signature.write_bytes(b"sig")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _runner(self, completed):
+        calls = []
+
+        def run(argv, timeout):
+            calls.append((argv, timeout))
+            return completed
+
+        run.calls = calls
+        return run
+
+    def test_tanda_tangan_valid_mengembalikan_fingerprint(self):
+        runner = self._runner(
+            self.FakeCompleted(stdout=f"[GNUPG:] VALIDSIG {self.FINGERPRINT} 2026-11-21\n")
+        )
+        fingerprint = verify_manifest_signature(
+            self.manifest, self.signature, runner=runner
+        )
+        self.assertEqual(fingerprint, self.FINGERPRINT)
+        self.assertIn("--verify", runner.calls[0][0])
+        self.assertIn(str(self.signature), runner.calls[0][0])
+
+    def test_tanda_tangan_tidak_cocok(self):
+        runner = self._runner(
+            self.FakeCompleted(returncode=1, stderr="[GNUPG:] BADSIG DEADBEEF penanda tangan\n")
+        )
+        with self.assertRaises(SignatureError) as context:
+            verify_manifest_signature(self.manifest, self.signature, runner=runner)
+        self.assertIn("tidak cocok", str(context.exception))
+
+    def test_kunci_publik_tidak_tersedia(self):
+        runner = self._runner(
+            self.FakeCompleted(returncode=2, stdout="[GNUPG:] NO_PUBKEY DEADBEEF\n")
+        )
+        with self.assertRaises(SignatureError) as context:
+            verify_manifest_signature(self.manifest, self.signature, runner=runner)
+        self.assertIn("kunci publik", str(context.exception))
+
+    def test_status_tanpa_validsig_ditolak(self):
+        runner = self._runner(self.FakeCompleted(returncode=0, stdout="gpg: catatan\n"))
+        with self.assertRaises(SignatureError):
+            verify_manifest_signature(self.manifest, self.signature, runner=runner)
+
+    def test_berkas_tidak_ditemukan(self):
+        with self.assertRaises(SignatureError):
+            verify_manifest_signature(self.dir / "tidak-ada.json", self.signature)
+
+    def test_gpg_tidak_tersedia(self):
+        def missing(_argv, _timeout):
+            raise FileNotFoundError("gpg")
+
+        with self.assertRaises(SignatureError) as context:
+            verify_manifest_signature(self.manifest, self.signature, runner=missing)
+        self.assertIn("gpg tidak tersedia", str(context.exception))
 
 
 if __name__ == "__main__":

@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 
 class ModelError(RuntimeError):
@@ -22,6 +23,10 @@ class ModelNotFound(ModelError):
 
 class ModelVerificationFailed(ModelError):
     """Checksum berkas model tidak cocok dengan manifest."""
+
+
+class SignatureError(ModelError):
+    """Tanda tangan manifest model tidak valid atau tidak dapat diverifikasi."""
 
 
 MANIFEST_FIELDS = (
@@ -165,6 +170,68 @@ class ModelManager:
         return self._status.get(model_id, UNLOADED)
 
 
+def _run_gpg(argv: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)
+
+
+def _validsig_fingerprint(status_output: str) -> str | None:
+    for line in status_output.splitlines():
+        parts = line.strip().split()
+        if len(parts) >= 3 and parts[0] == "[GNUPG:]" and parts[1] == "VALIDSIG":
+            return parts[2]
+    return None
+
+
+_PROBLEM_TOKENS = {
+    "BADSIG": "tanda tangan tidak cocok",
+    "ERRSIG": "tanda tangan tidak dapat diperiksa",
+    "NO_PUBKEY": "kunci publik penanda tangan tidak tersedia",
+    "EXPKEYSIG": "kunci penanda tangan sudah kedaluwarsa",
+    "REVKEYSIG": "kunci penanda tangan sudah dicabut",
+}
+
+
+def _problem_detail(status_output: str, returncode: int) -> str:
+    for line in status_output.splitlines():
+        parts = line.strip().split()
+        if len(parts) >= 2 and parts[0] == "[GNUPG:]":
+            message = _PROBLEM_TOKENS.get(parts[1])
+            if message is not None:
+                return message
+    return f"gpg keluar dengan status {returncode}"
+
+
+def verify_manifest_signature(
+    manifest_path: str | Path,
+    signature_path: str | Path,
+    *,
+    gpg: str = "gpg",
+    runner: Callable[[list[str], float], subprocess.CompletedProcess[str]] | None = None,
+    timeout: float = 30.0,
+) -> str:
+    """Verifikasi detached signature manifest dan kembalikan fingerprint penanda tangan."""
+    manifest = Path(manifest_path)
+    signature = Path(signature_path)
+    if not manifest.is_file():
+        raise SignatureError(f"manifest tidak ditemukan: {manifest}")
+    if not signature.is_file():
+        raise SignatureError(f"signature tidak ditemukan: {signature}")
+    argv = [gpg, "--batch", "--status-fd", "1", "--verify", str(signature), str(manifest)]
+    run = runner or _run_gpg
+    try:
+        completed = run(argv, timeout)
+    except FileNotFoundError as exc:
+        raise SignatureError("gpg tidak tersedia; pasang gnupg untuk memverifikasi signature") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise SignatureError("verifikasi signature melewati batas waktu") from exc
+    output = f"{getattr(completed, 'stdout', '') or ''}{getattr(completed, 'stderr', '') or ''}"
+    fingerprint = _validsig_fingerprint(output)
+    returncode = int(getattr(completed, "returncode", 1))
+    if returncode != 0 or fingerprint is None:
+        raise SignatureError(f"verifikasi signature gagal: {_problem_detail(output, returncode)}")
+    return fingerprint
+
+
 def load_manifests_from_file(path: str | Path) -> list[ModelManifest]:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     if isinstance(data, dict):
@@ -184,5 +251,7 @@ __all__ = [
     "ModelManager",
     "ModelNotFound",
     "ModelVerificationFailed",
+    "SignatureError",
     "load_manifests_from_file",
+    "verify_manifest_signature",
 ]

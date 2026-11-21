@@ -17,7 +17,7 @@ from .executor import (
     select_backend,
 )
 from .files import FileOperationError, FileTool, PathOutsideWorkspace, search
-from .model_manager import ModelError, ModelManager, load_manifests_from_file
+from .model_manager import ModelError, ModelManager, load_manifests_from_file, verify_manifest_signature
 from .stop import StopController, StopRequested
 from .trace import TraceWriter
 from .policy import AdministratorMode, PolicyGate
@@ -226,6 +226,9 @@ def _cmd_model(args: argparse.Namespace) -> int:
     if not args.model_id:
         raise ValueError(f"model {args.operation} membutuhkan model_id")
     if args.operation == "verify":
+        if args.signature:
+            fingerprint = verify_manifest_signature(args.manifest, args.signature)
+            print(f"signature valid: {fingerprint}")
         ok = manager.verify(args.model_id)
         print("checksum cocok" if ok else "checksum tidak cocok")
         return EXIT_OK if ok else EXIT_ERROR
@@ -325,6 +328,7 @@ def build_parser() -> argparse.ArgumentParser:
     model.add_argument("operation", choices=("list", "verify", "load", "unload", "status"))
     model.add_argument("model_id", nargs="?")
     model.add_argument("--manifest", required=True, help="berkas manifest JSON model")
+    model.add_argument("--signature", help="detached signature GPG untuk manifest (opsional)")
     model.add_argument("--lab", help=f"akar lab (default: ${LAB_ENV})")
     model.set_defaults(func=_cmd_model)
 

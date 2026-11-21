@@ -13,7 +13,7 @@ Status saat ini:
 - [x] Phase 2 — command executor `argv`, `shell`, `script`, `interactive`
 - [x] Backend input desktop dan dry-run
 - [x] Perception — penelusuran dan aksi AT-SPI2 via pyatspi, tangkapan layar grim/import, verifikasi state
-- [x] Model manager — manifest, checksum, load/unload, status OOM
+- [x] Model manager — manifest, checksum, signature GPG, load/unload, status OOM
 - [] Runtime model lokal (VLM) dan benchmark hardware
 - [] Tool dokumen & presentasi (`.pptx`)
 - [] Interaksi UI kompleks (tabel, klik kanan, seleksi, font)
@@ -43,7 +43,7 @@ python -m fishing_agent system packages list
 python -m fishing_agent productivity markdown laporan.md --title Laporan --content "Hasil"
 python -m fishing_agent productivity pptx presentasi.pptx --slides '[{"title":"Demo","body":"Fishing OS"}]'
 python -m fishing_agent model list --manifest models.json
-python -m fishing_agent model verify qwen2.5-vl-3b --manifest models.json
+python -m fishing_agent model verify qwen2.5-vl-3b --manifest models.json --signature models.json.sig
 python -m fishing_agent model load qwen2.5-vl-3b --manifest models.json
 ```
 
@@ -91,6 +91,15 @@ Subcommand `file` mendukung `list`, `metadata`, `search`, `read`, `write`,
 delete harus memakai `--approved`. File tool tidak mengikuti symlink untuk
 operasi baca/mutasi, membatasi ukuran input/output, dan melaporkan error secara
 eksplisit.
+
+## Model manager
+
+Manifest model wajib memuat `id`, `version`, dan `checksum` (SHA-256 default).
+`model verify` membandingkan checksum berkas di `models/`; bila `--signature`
+diberikan, detached signature GPG manifest diverifikasi lebih dulu dan
+fingerprint penanda tangan dicetak. `model load` menolak checksum yang salah,
+berkas yang hilang, atau status OOM, lalu melaporkan status
+`loaded`/`unloaded`/`missing`/`failed`.
 
 ## Penghentian
 
