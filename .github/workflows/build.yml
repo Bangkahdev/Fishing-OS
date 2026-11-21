@@ -39,7 +39,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install dependencies
-        run: pacman -Syu --noconfirm archiso git
+        run: pacman -Syu --noconfirm archiso git python libisoburn squashfs-tools
 
       - name: Determine ISO version and SOURCE_DATE_EPOCH
         id: version
@@ -98,6 +98,21 @@ jobs:
           fi
           rm -rf work
           (cd out && sha256sum -- fishing-os-*.iso > sha256sums.txt && cat sha256sums.txt)
+
+      - name: 'Audit Live ISO: tanpa komponen Assistant'
+        run: |
+          set -euo pipefail
+          rm -rf iso-extract iso-rootfs
+          xorriso -osirrox on -indev out/fishing-os-*.iso -extract / iso-extract >/dev/null
+          shopt -s nullglob
+          sfs_files=(iso-extract/arch/x86_64/airootfs.sfs)
+          if [[ ${#sfs_files[@]} -ne 1 ]]; then
+            echo "::error::Diharapkan tepat 1 squashfs root, ditemukan ${#sfs_files[@]}"
+            exit 1
+          fi
+          unsquashfs -d iso-rootfs "${sfs_files[0]}" >/dev/null
+          cd agent
+          python -m fishing_agent audit-iso ../iso-rootfs
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
