@@ -18,7 +18,7 @@ Tanggal pemeriksaan terakhir: 22 November 2026.
 | Phase 3 — productivity | Fondasi selesai | `productivity.py` untuk Markdown, CSV, dan PPTX OOXML minimal. |
 | Phase 4 — desktop automation | Fondasi sebagian | Backend X11/Wayland, aksi atomik, penelusuran dan aksi AT-SPI2 via pyatspi, screenshot grim/import, verifikasi pasca-aksi, serta aksi skrip `ui_action`; uji pada sesi Hyprland Fishing OS belum. |
 | Phase 5 — hybrid AI | Fondasi selesai | `model_manager.py`: manifest, checksum SHA-256, verifikasi detached signature GPG, load/unload, status OOM/missing; runtime inferensi dan pilihan model belum dikunci. |
-| Phase 6 — GUI/TUI | Belum | CLI tersedia; GUI/TUI dan IPC lintas-proses belum tersedia. |
+| Phase 6 — GUI/TUI | Fondasi selesai | CLI, TUI stdio, GUI Tkinter adapter, dan Unix IPC control plane tersedia; integrasi launcher desktop GUI/TUI masih perlu dirilis. |
 | Phase 7 — release hardening | Sebagian | Paket/model signing dan audit Live ISO tersedia; paket resmi, installer option, dan release matrix masih perlu integrasi. |
 
 ## Struktur modul
@@ -43,6 +43,8 @@ Tanggal pemeriksaan terakhir: 22 November 2026.
 | `package_audit.py` | Audit filesystem hasil ekstraksi Live ISO untuk paket, launcher, service, dan model Assistant terlarang. |
 | `stop.py` | Cancellation melalui event, signal, atau stop file. |
 | `cli.py` | Interface CLI untuk seluruh kapabilitas fondasi. |
+| `tui.py` | Adapter TUI stdin/stdout untuk task, approval, status, dan cancellation. |
+| `gui_adapter.py` | Adapter Tkinter tipis; memakai `ControlService` dan tidak memiliki executor/policy sendiri. |
 
 ## Kontrak penggunaan
 
@@ -58,6 +60,9 @@ python -m fishing_agent productivity pptx demo.pptx --slides "[{\"title\":\"Demo
 python -m fishing_agent model list --lab C:\temp\fishing-lab --manifest models.json
 python -m fishing_agent model verify qwen2.5-vl-3b --lab C:\temp\fishing-lab --manifest models.json --signature models.json.sig
 python -m fishing_agent model load qwen2.5-vl-3b --lab C:\temp\fishing-lab --manifest models.json
+python -m fishing_agent tui
+python -m fishing_agent gui
+python -m fishing_agent ipc-server C:\temp\fishing-assistant.sock
 ```
 
 UI grounding AT-SPI2 memakai `ATSPiReader.perform_action` untuk menjalankan
@@ -100,7 +105,7 @@ transport karena target produk adalah Fishing OS/Linux.
 
 ## Verifikasi
 
-Test suite saat ini berisi 119 test yang mencakup command contract, policy, task
+Test suite saat ini berisi 123 test yang mencakup command contract, policy, task
 state, service, filesystem, system adapter, productivity output, action
 executor, trace, configuration, stop behavior, AT-SPI2, screenshot, verifikasi
 pasca-aksi, dan model manager termasuk signature GPG. Setiap perubahan modul
