@@ -11,11 +11,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from .atspi import ATSPiReader
 from .stop import StopController, StopRequested
 from .trace import TraceWriter
+from .verification import VerificationFailed
 
 BACKEND_ENV = "FISHING_AGENT_BACKEND"
-VALID_KINDS = ("move", "click", "rightclick", "type", "key", "wait", "sh", "notify")
+VALID_KINDS = ("move", "click", "rightclick", "type", "key", "wait", "sh", "notify", "ui_action")
 
 
 class ActionError(ValueError):
@@ -180,6 +182,7 @@ class ActionExecutor:
         max_steps: int = 50,
         perception: str = "sesi desktop aktif",
         sleep: Callable[[float], None] | None = None,
+        atspi: ATSPiReader | None = None,
     ) -> None:
         if max_steps < 1:
             raise ValueError("max_steps minimal 1")
@@ -189,6 +192,7 @@ class ActionExecutor:
         self.pacing = max(0.0, float(pacing))
         self.max_steps = int(max_steps)
         self.perception = perception
+        self.atspi = atspi
         self._sleep = sleep or stop.sleep
 
     def run(self, actions: Iterable[Action]) -> int:
@@ -199,13 +203,14 @@ class ActionExecutor:
                     self._log_stop("batas max-steps tercapai")
                     break
                 self.stop.check()
+                action_perception = self.perception
                 try:
-                    self._dispatch(action)
+                    action_perception = self._dispatch(action) or self.perception
                 except StopRequested:
                     raise
                 except Exception as exc:
                     self.trace.write(
-                        perception=self.perception,
+                        perception=action_perception,
                         action=action.kind,
                         parameters=action.params,
                         status="error",
@@ -213,7 +218,7 @@ class ActionExecutor:
                     )
                     raise
                 self.trace.write(
-                    perception=self.perception,
+                    perception=action_perception,
                     action=action.kind,
                     parameters=action.params,
                     status="ok",
@@ -228,7 +233,7 @@ class ActionExecutor:
     def _log_stop(self, note: str) -> None:
         self.trace.write(perception=self.perception, action="stop", status="stopped", note=note)
 
-    def _dispatch(self, action: Action) -> None:
+    def _dispatch(self, action: Action) -> str | None:
         params = action.params
         if action.kind == "move":
             self.backend.move(int(params["x"]), int(params["y"]))
@@ -249,8 +254,39 @@ class ActionExecutor:
             self.backend.command([str(part) for part in argv])
         elif action.kind == "notify":
             self.backend.command(["notify-send", str(params.get("text", "fishing-agent"))])
+        elif action.kind == "ui_action":
+            return self._ui_action(params)
         else:  # pragma: no cover - dijaga oleh Action.__post_init__
             raise ActionError(f"aksi tidak dikenal: {action.kind}")
+        return None
+
+    def _ui_action(self, params: dict[str, Any]) -> str:
+        role = params.get("role")
+        name = params.get("name")
+        if not role and not name:
+            raise ActionError("aksi 'ui_action' butuh 'role' atau 'name'")
+        reader = self.atspi or ATSPiReader()
+        if not reader.available:
+            raise BackendUnavailable(
+                "AT-SPI2 tidak tersedia; aktifkan bridge aksesibilitas atau gunakan "
+                "aksi pointer/koordinat dengan verifikasi visual"
+            )
+        expected = params.get("expected_change") or ()
+        if isinstance(expected, str):
+            expected = (expected,)
+        result = reader.perform_action(
+            str(role) if role else None,
+            str(name) if name else None,
+            action=params.get("action"),
+            app_id=params.get("app_id"),
+            expected_change=tuple(str(field) for field in expected),
+        )
+        perception = f"atspi: {result['role']} '{result['name']}' via {result['action']}"
+        if not result["verified"]:
+            perception += f" (belum terverifikasi: {result['note']})"
+            if params.get("verify", True):
+                raise VerificationFailed(result["note"])
+        return perception
 
 
 def load_actions(path: str | Path) -> list[Action]:

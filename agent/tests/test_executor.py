@@ -14,6 +14,37 @@ from fishing_agent.executor import (
 )
 from fishing_agent.stop import StopController, StopRequested
 from fishing_agent.trace import TraceWriter
+from fishing_agent.verification import VerificationFailed
+
+
+class FakeATSPi:
+    def __init__(self, *, available=True, verified=True, note="state diverifikasi sesuai harapan"):
+        self.available = available
+        self.verified = verified
+        self.note = note
+        self.calls = []
+
+    def perform_action(self, role=None, name=None, *, action=None, app_id=None, expected_change=()):
+        self.calls.append(
+            {
+                "role": role,
+                "name": name,
+                "action": action,
+                "app_id": app_id,
+                "expected_change": expected_change,
+            }
+        )
+        return {
+            "ok": True,
+            "grounding": "atspi",
+            "role": role or "push button",
+            "name": name or "target",
+            "action": action or "click",
+            "before": {"role": role, "name": name, "state": ["enabled"]},
+            "after": {"role": role, "name": name, "state": ["enabled"]},
+            "verified": self.verified,
+            "note": self.note,
+        }
 
 
 def make_executor(tmp: Path, **kwargs) -> tuple[ActionExecutor, DryRunBackend, TraceWriter]:
@@ -94,6 +125,60 @@ class ActionExecutorTest(unittest.TestCase):
             actions = load_actions(script)
         self.assertEqual(actions[0].kind, "key")
         self.assertEqual(actions[0].params["keys"], "ctrl+s")
+
+    def test_ui_action_memakai_atspi_dan_mencatat_sumber_grounding(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            atspi = FakeATSPi()
+            executor, backend, trace = make_executor(Path(tmp), atspi=atspi)
+            executed = executor.run(
+                [Action("ui_action", {"role": "push button", "name": "Simpan", "action": "click"})]
+            )
+            trace.close()
+            rows = [json.loads(line) for line in (Path(tmp) / "session.jsonl").read_text().splitlines()]
+        self.assertEqual(executed, 1)
+        self.assertEqual(backend.calls, [])
+        self.assertEqual(atspi.calls[0]["name"], "Simpan")
+        self.assertEqual(rows[0]["action"], "ui_action")
+        self.assertEqual(rows[0]["status"], "ok")
+        self.assertIn("atspi:", rows[0]["perception"])
+
+    def test_ui_action_butuh_role_atau_nama(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            executor, _backend, trace = make_executor(Path(tmp), atspi=FakeATSPi())
+            with self.assertRaises(ActionError):
+                executor.run([Action("ui_action", {})])
+            trace.close()
+
+    def test_ui_action_gagal_saat_atspi_tidak_tersedia(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            executor, _backend, trace = make_executor(Path(tmp), atspi=FakeATSPi(available=False))
+            with self.assertRaises(BackendUnavailable):
+                executor.run([Action("ui_action", {"name": "Simpan"})])
+            trace.close()
+            rows = [json.loads(line) for line in (Path(tmp) / "session.jsonl").read_text().splitlines()]
+        self.assertEqual(rows[-1]["status"], "error")
+
+    def test_ui_action_berhenti_saat_verifikasi_gagal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            atspi = FakeATSPi(verified=False, note="target hilang setelah aksi")
+            executor, _backend, trace = make_executor(Path(tmp), atspi=atspi)
+            with self.assertRaises(VerificationFailed):
+                executor.run([Action("ui_action", {"name": "Simpan"})])
+            trace.close()
+            rows = [json.loads(line) for line in (Path(tmp) / "session.jsonl").read_text().splitlines()]
+        self.assertEqual(rows[-1]["status"], "error")
+        self.assertIn("target hilang", rows[-1]["note"])
+
+    def test_ui_action_dapat_melewati_verifikasi_secara_eksplisit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            atspi = FakeATSPi(verified=False, note="dialog tertutup")
+            executor, _backend, trace = make_executor(Path(tmp), atspi=atspi)
+            executed = executor.run([Action("ui_action", {"name": "Tutup", "verify": False})])
+            trace.close()
+            rows = [json.loads(line) for line in (Path(tmp) / "session.jsonl").read_text().splitlines()]
+        self.assertEqual(executed, 1)
+        self.assertEqual(rows[0]["status"], "ok")
+        self.assertIn("belum terverifikasi", rows[0]["perception"])
 
 
 class BackendSelectionTest(unittest.TestCase):
