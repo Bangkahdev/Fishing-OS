@@ -17,7 +17,7 @@ Tanggal pemeriksaan terakhir: 21 November 2026.
 | Phase 2 — command/system capability | Fondasi selesai | `command.py`, `files.py`, `system.py`, privilege gate, dan audit redaction. |
 | Phase 3 — productivity | Fondasi selesai | `productivity.py` untuk Markdown, CSV, dan PPTX OOXML minimal. |
 | Phase 4 — desktop automation | Fondasi sebagian | Backend X11/Wayland, aksi atomik, penelusuran dan aksi AT-SPI2 via pyatspi, screenshot grim/import, verifikasi pasca-aksi, serta aksi skrip `ui_action`; uji pada sesi Hyprland Fishing OS belum. |
-| Phase 5 — hybrid AI | Fondasi selesai | `model_manager.py`: manifest, checksum SHA-256, load/unload, status OOM/missing; runtime inferensi dan pilihan model belum dikunci. |
+| Phase 5 — hybrid AI | Fondasi selesai | `model_manager.py`: manifest, checksum SHA-256, verifikasi detached signature GPG, load/unload, status OOM/missing; runtime inferensi dan pilihan model belum dikunci. |
 | Phase 6 — GUI/TUI | Belum | CLI tersedia; GUI/TUI dan IPC lintas-proses belum tersedia. |
 | Phase 7 — release hardening | Belum | Paket Fishing OS, installer option, signature/model manifest, dan audit Live ISO belum terintegrasi. |
 
@@ -39,7 +39,7 @@ Tanggal pemeriksaan terakhir: 21 November 2026.
 | `atspi.py` | Reader AT-SPI2 via pyatspi: frame aktif, penelusuran pohon, filter role/name, elemen pada koordinat, dan `perform_action` dengan verifikasi state. |
 | `screenshot.py` | Tangkapan layar grim (Wayland/Hyprland) atau import (X11) dengan status tidak tersedia. |
 | `verification.py` | Verifikasi state sebelum/sesudah aksi, termasuk perubahan yang diharapkan. |
-| `model_manager.py` | Manifest model, verifikasi checksum, load/unload, dan status OOM/missing. |
+| `model_manager.py` | Manifest model, verifikasi checksum dan signature GPG, load/unload, dan status OOM/missing. |
 | `stop.py` | Cancellation melalui event, signal, atau stop file. |
 | `cli.py` | Interface CLI untuk seluruh kapabilitas fondasi. |
 
@@ -55,7 +55,7 @@ python -m fishing_agent file metadata C:\Windows\System32\notepad.exe
 python -m fishing_agent system network status --lab C:\temp\fishing-lab
 python -m fishing_agent productivity pptx demo.pptx --slides "[{\"title\":\"Demo\",\"body\":\"Fishing OS\"}]"
 python -m fishing_agent model list --lab C:\temp\fishing-lab --manifest models.json
-python -m fishing_agent model verify qwen2.5-vl-3b --lab C:\temp\fishing-lab --manifest models.json
+python -m fishing_agent model verify qwen2.5-vl-3b --lab C:\temp\fishing-lab --manifest models.json --signature models.json.sig
 python -m fishing_agent model load qwen2.5-vl-3b --lab C:\temp\fishing-lab --manifest models.json
 ```
 
@@ -99,11 +99,11 @@ transport karena target produk adalah Fishing OS/Linux.
 
 ## Verifikasi
 
-Test suite saat ini berisi 103 test yang mencakup command contract, policy, task
+Test suite saat ini berisi 109 test yang mencakup command contract, policy, task
 state, service, filesystem, system adapter, productivity output, action
 executor, trace, configuration, stop behavior, AT-SPI2, screenshot, verifikasi
-pasca-aksi, dan model manager. Setiap perubahan modul harus menambahkan test
-fokus di `agent/tests/` dan menjalankan:
+pasca-aksi, dan model manager termasuk signature GPG. Setiap perubahan modul
+harus menambahkan test fokus di `agent/tests/` dan menjalankan:
 
 ```bash
 cd agent
@@ -117,7 +117,7 @@ CI menjalankan suite ini melalui job `whitebox` di
 
 1. Tambahkan adapter GUI/TUI yang memakai IPC lokal dan bukan executor sendiri.
 2. Integrasikan package group Assistant, installer optional, repository signing,
-   model manifest, dan audit bahwa Live ISO tidak membawa Assistant.
+   dan audit bahwa Live ISO tidak membawa Assistant.
 3. Tambahkan integration/black-box test pada Fishing OS Linux; test Windows
    lokal hanya memverifikasi kontrak dan artefak yang portable.
 4. Uji AT-SPI2 dan input Wayland pada sesi Hyprland Fishing OS nyata; fallback
