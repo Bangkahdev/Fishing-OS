@@ -14,6 +14,8 @@ Status saat ini:
 - [x] Backend input desktop dan dry-run
 - [x] Perception — penelusuran dan aksi AT-SPI2 via pyatspi, tangkapan layar grim/import, verifikasi state
 - [x] Model manager — manifest, checksum, signature GPG, load/unload, status OOM
+- [x] GUI/TUI — adapter Tkinter dan TUI stdin/stdout di atas ControlService
+- [x] IPC persistent — Unix-domain socket untuk task lintas-interface
 - [] Runtime model lokal (VLM) dan benchmark hardware
 - [] Tool dokumen & presentasi (`.pptx`)
 - [] Interaksi UI kompleks (tabel, klik kanan, seleksi, font)
@@ -45,6 +47,9 @@ python -m fishing_agent productivity pptx presentasi.pptx --slides '[{"title":"D
 python -m fishing_agent model list --manifest models.json
 python -m fishing_agent model verify qwen2.5-vl-3b --manifest models.json --signature models.json.sig
 python -m fishing_agent model load qwen2.5-vl-3b --manifest models.json
+python -m fishing_agent tui
+python -m fishing_agent gui
+python -m fishing_agent ipc-server /tmp/fishing-assistant.sock
 ```
 
 Semua perintah menerima `--lab <path>` sebagai pengganti variabel lingkungan.

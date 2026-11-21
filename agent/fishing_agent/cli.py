@@ -24,6 +24,10 @@ from .trace import TraceWriter
 from .policy import AdministratorMode, PolicyGate
 from .system import SystemOperation, SystemTool, SystemToolError
 from .productivity import ProductivityError, create_csv, create_markdown, create_pptx
+from .gui_adapter import GUIAdapter, GUIUnavailable
+from .ipc import ControlIPCServer
+from .service import ControlService
+from .tui import TUI
 
 EXIT_OK = 0
 EXIT_ERROR = 1
@@ -248,6 +252,25 @@ def _cmd_audit_iso(args: argparse.Namespace) -> int:
     return EXIT_OK if not findings else EXIT_ERROR
 
 
+def _cmd_tui(args: argparse.Namespace) -> int:
+    return TUI(ControlService()).run()
+
+
+def _cmd_gui(args: argparse.Namespace) -> int:
+    try:
+        return GUIAdapter(ControlService()).run()
+    except GUIUnavailable as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_ERROR
+
+
+def _cmd_ipc_server(args: argparse.Namespace) -> int:
+    server = ControlIPCServer(args.path, ControlService())
+    print(f"control IPC: {args.path}", file=sys.stdout)
+    server.serve_forever()
+    return EXIT_OK
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fishing-agent",
@@ -342,6 +365,16 @@ def build_parser() -> argparse.ArgumentParser:
     audit = sub.add_parser("audit-iso", help="audit isi Live ISO yang sudah diekstrak")
     audit.add_argument("path", help="direktori hasil ekstrak ISO")
     audit.set_defaults(func=_cmd_audit_iso)
+
+    tui = sub.add_parser("tui", help="jalankan TUI control plane")
+    tui.set_defaults(func=_cmd_tui)
+
+    gui = sub.add_parser("gui", help="jalankan GUI control panel")
+    gui.set_defaults(func=_cmd_gui)
+
+    ipc = sub.add_parser("ipc-server", help="jalankan ControlService melalui Unix socket")
+    ipc.add_argument("path", help="path Unix-domain socket")
+    ipc.set_defaults(func=_cmd_ipc_server)
 
     stop = sub.add_parser("stop", help="tulis stop file agar loop berhenti")
     stop.add_argument("--lab", help=f"akar lab (default: ${LAB_ENV})")

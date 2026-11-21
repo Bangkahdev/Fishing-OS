@@ -54,6 +54,44 @@ class ControlIPCServer:
             if self.path.exists():
                 self.path.unlink()
 
+    def serve_forever(self) -> None:
+        """Terima banyak klien sampai stop() dipanggil."""
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        os.chmod(self.path.parent, stat.S_IRWXU)
+        if self.path.exists():
+            self.path.unlink()
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self._server = server
+        server.bind(str(self.path))
+        os.chmod(self.path, stat.S_IRUSR | stat.S_IWUSR)
+        server.listen(20)
+        threads: list[threading.Thread] = []
+        try:
+            server.settimeout(0.2)
+            while not self._stop.is_set():
+                try:
+                    connection, _ = server.accept()
+                except socket.timeout:
+                    continue
+                thread = threading.Thread(
+                    target=self._serve_connection,
+                    args=(connection,),
+                    daemon=True,
+                )
+                threads.append(thread)
+                thread.start()
+        finally:
+            for thread in threads:
+                thread.join(timeout=0.1)
+            server.close()
+            self._server = None
+            if self.path.exists():
+                self.path.unlink()
+
+    def _serve_connection(self, connection: socket.socket) -> None:
+        with connection:
+            self._handle(connection)
+
     def stop(self) -> None:
         self._stop.set()
         if self._server is not None:
