@@ -4,11 +4,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import subprocess
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 from .config import LAB_ENV, LabError, LabPaths
 from .command import CommandExecutor, CommandRequest
+from .orchestrator import Orchestrator, RunReport
+from .planner import PlannerError, get_planner, plan_from_json
+from .registry import ToolContext, ToolRegistry
+from .tools import register_default_tools
 from .executor import (
     ActionError,
     ActionExecutor,
@@ -27,11 +34,31 @@ from .productivity import ProductivityError, create_csv, create_markdown, create
 from .gui_adapter import GUIAdapter, GUIUnavailable
 from .ipc import ControlIPCServer
 from .service import ControlService
+from .task import TaskState
 from .tui import TUI
 
 EXIT_OK = 0
 EXIT_ERROR = 1
 EXIT_STOPPED = 130
+EXIT_WAITING = 2
+
+
+class _FixedPlanner:
+    """Perencana yang mengembalikan rencana tetap (untuk opsi --plan JSON)."""
+
+    name = "fixed"
+
+    def __init__(self, plan) -> None:
+        self._plan = plan
+
+    def plan(self, instruction: str, context: ToolContext):
+        return self._plan
+
+
+def _default_registry() -> ToolRegistry:
+    registry = ToolRegistry()
+    register_default_tools(registry)
+    return registry
 
 
 def _lab(args: argparse.Namespace) -> LabPaths:
@@ -271,6 +298,104 @@ def _cmd_ipc_server(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _load_plan(value: str):
+    """Terima path berkas JSON atau JSON sebaris untuk opsi --plan."""
+    source = Path(value).expanduser()
+    try:
+        text = source.read_text(encoding="utf-8") if source.is_file() else value
+    except OSError as exc:
+        raise PlannerError(f"gagal membaca rencana '{value}': {exc}") from exc
+    try:
+        return plan_from_json(json.loads(text))
+    except (json.JSONDecodeError, PlannerError) as exc:
+        raise PlannerError(f"rencana JSON tidak valid: {exc}") from exc
+
+
+def _cmd_assist(args: argparse.Namespace) -> int:
+    """Jalankan task bahasa alami: rencana -> validasi -> eksekusi -> verifikasi."""
+    lab = _lab(args).ensure()
+    administrator = AdministratorMode()
+    if args.enable_admin:
+        if subprocess.run(["sudo", "-v"], check=False).returncode != 0:
+            print("autentikasi Administrator Mode gagal", file=sys.stderr)
+            return EXIT_ERROR
+        administrator.enable(args.admin_duration)
+
+    if not args.instruction and not args.plan:
+        print("error: instruksi atau --plan wajib diisi", file=sys.stderr)
+        return EXIT_ERROR
+
+    try:
+        if args.plan:
+            planner = _FixedPlanner(_load_plan(args.plan))
+        else:
+            planner = get_planner(args.planner)
+    except PlannerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_ERROR
+    instruction = args.instruction or "(rencana eksplisit dari --plan)"
+
+    policy = PolicyGate(administrator)
+    service = ControlService(policy=policy)
+    orchestrator = Orchestrator(
+        _default_registry(),
+        planner,
+        service=service,
+        lab=lab,
+        administrator=administrator,
+        working_directory=str(lab.workspace),
+    )
+
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    trace_path = lab.logs / f"assist-{stamp}.jsonl"
+    previous_cwd = os.getcwd()
+    try:
+        # Output relatif (dokumen/berkas) diselaraskan ke workspace lab.
+        os.chdir(str(lab.workspace))
+        with TraceWriter(trace_path) as trace:
+            orchestrator.service.trace = trace
+            if args.print_plan:
+                context = ToolContext(policy=policy, administrator=administrator, stop=StopController(), lab=lab, task_id="preview")
+                try:
+                    plan = planner.plan(instruction, context)
+                except PlannerError as exc:
+                    print(f"error: rencana gagal: {exc}", file=sys.stderr)
+                    return EXIT_ERROR
+                print(plan.to_json())
+                return EXIT_OK
+
+            report: RunReport = orchestrator.run(
+                instruction,
+                approved=args.approve,
+                dry_run=args.dry_run,
+                task_id=args.task_id,
+            )
+
+        print(f"task: {report.task_id} | status: {report.status.value}", file=sys.stdout)
+        if report.plan is not None:
+            print(f"rencana ({report.plan.planner}): {report.plan.summary}", file=sys.stdout)
+        for step in report.steps:
+            marker = "ok" if step.ok else "gagal"
+            print(f"  - {step.tool} [{step.risk}] {marker}: {step.summary}", file=sys.stdout)
+        if report.summary:
+            print(f"ringkasan: {report.summary}", file=sys.stdout)
+        print(f"trace: {trace_path}", file=sys.stderr)
+
+        if report.status is TaskState.WAITING_FOR_APPROVAL:
+            print("perlu approval: jalankan ulang dengan --approve", file=sys.stderr)
+            return EXIT_WAITING
+        if report.status is TaskState.WAITING_FOR_AUTHENTICATION:
+            print("perlu autentikasi: jalankan ulang dengan --enable-admin", file=sys.stderr)
+            return EXIT_WAITING
+        if report.status is TaskState.CANCELLED:
+            return EXIT_STOPPED
+        if args.dry_run and report.validated:
+            return EXIT_OK
+        return EXIT_OK if report.status in (TaskState.COMPLETED, TaskState.READY) else EXIT_ERROR
+    finally:
+        os.chdir(previous_cwd)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fishing-agent",
@@ -371,6 +496,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     gui = sub.add_parser("gui", help="jalankan GUI control panel")
     gui.set_defaults(func=_cmd_gui)
+
+    assist = sub.add_parser("assist", help="jalankan task bahasa alami lewat orchestrator")
+    assist.add_argument("instruction", nargs="?", default="", help="instruksi bahasa alami")
+    assist.add_argument("--plan", help="rencana tool call eksplisit (JSON) sebagai ganti perencana")
+    assist.add_argument("--planner", default="heuristic", help="perencana: heuristic (default)")
+    assist.add_argument("--lab", help=f"akar lab (default: ${LAB_ENV})")
+    assist.add_argument("--task-id", default=None)
+    assist.add_argument("--approve", action="store_true", help="setujui operasi berisiko tinggi/overwrite")
+    assist.add_argument("--enable-admin", action="store_true", help="autentikasi Administrator Mode via sudo -v")
+    assist.add_argument("--admin-duration", type=float, default=900.0)
+    assist.add_argument("--dry-run", action="store_true", help="validasi rencana tanpa eksekusi")
+    assist.add_argument("--print-plan", action="store_true", help="cetak rencana (JSON) lalu keluar")
+    assist.set_defaults(func=_cmd_assist)
 
     ipc = sub.add_parser("ipc-server", help="jalankan ControlService melalui Unix socket")
     ipc.add_argument("path", help="path Unix-domain socket")
