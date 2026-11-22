@@ -1,0 +1,38 @@
+# Maintainer: Fishing OS Project
+# Paket resmi Computer-Use Assistant. TIDAK termasuk dalam Live ISO (SRS §9.5).
+# Bangun: makepkg -si   (dari dalam direktori packaging/assistant)
+pkgname=fishing-assistant
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Fishing OS Computer-Use Assistant - asisten AI lokal untuk mengelola perangkat"
+arch=('x86_64')
+url="https://github.com/Bangkahdev/Fishing-OS"
+license=('GPL-3.0-or-later')
+depends=('python')
+optdepends=(
+    'xdotool: backend input X11/XFCE'
+    'ydotool: backend pointer Wayland/Hyprland'
+    'wtype: backend ketik Wayland/Hyprland'
+    'grim: tangkapan layar Wayland/Hyprland'
+    'imagemagick: tangkapan layar X11 (import)'
+    'python-pyatspi: grounding AT-SPI2 (aksesibilitas)'
+    'gnupg: verifikasi signature manifest model'
+)
+source=()
+sha256sums=()
+
+package() {
+    cd "${startdir}/../.."   # akar repo dari packaging/assistant
+    install -d -m 0755 "${pkgdir}/usr/lib/fishing-assistant"
+    cp -r agent/fishing_agent "${pkgdir}/usr/lib/fishing-assistant/fishing_agent"
+    find "${pkgdir}" -name '__pycache__' -type d -prune -exec rm -rf {} +
+
+    install -Dm 0755 packaging/assistant/fishing-assistant \
+        "${pkgdir}/usr/bin/fishing-assistant"
+    install -Dm 0644 packaging/assistant/fishing-assistant.desktop \
+        "${pkgdir}/usr/share/applications/fishing-assistant.desktop"
+    install -Dm 0644 packaging/assistant/fishing-assistant.service \
+        "${pkgdir}/usr/lib/systemd/user/fishing-assistant.service"
+    install -Dm 0644 docs/COMPUTER_USE_ASSISTANT_IMPLEMENTATION.md \
+        "${pkgdir}/usr/share/doc/fishing-assistant/README.md"
+}

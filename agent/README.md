@@ -13,9 +13,15 @@ Status saat ini:
 - [x] Phase 2 — command executor `argv`, `shell`, `script`, `interactive`
 - [x] Backend input desktop dan dry-run
 - [x] Perception — penelusuran dan aksi AT-SPI2 via pyatspi, tangkapan layar grim/import, verifikasi state
+- [x] Orchestrator + tool registry + planner — instruksi bahasa alami → rencana → validasi schema → policy → eksekusi → verifikasi
 - [x] Model manager — manifest, checksum, signature GPG, load/unload, status OOM
+- [x] GUI/TUI — adapter Tkinter dan TUI stdin/stdout di atas ControlService
+- [x] IPC persistent — Unix-domain socket untuk task lintas-interface
+- [x] Privilege Broker — IPC Unix terautentikasi (UID sama), validasi payload, sudo native, audit
+- [x] Artefak paket OS (`packaging/assistant/`) + guard Live ISO
 - [] Runtime model lokal (VLM) dan benchmark hardware
-- [] Tool dokumen & presentasi (`.pptx`)
+- [x] Grounding fallback visual — AT-SPI2 dahulu, describer VLM/Set-of-Mark pluggable
+- [] Integrasi opsi installer archinstall & repository signing
 - [] Interaksi UI kompleks (tabel, klik kanan, seleksi, font)
 - [] Evaluasi & fine-tuning opsional
 
@@ -45,9 +51,33 @@ python -m fishing_agent productivity pptx presentasi.pptx --slides '[{"title":"D
 python -m fishing_agent model list --manifest models.json
 python -m fishing_agent model verify qwen2.5-vl-3b --manifest models.json --signature models.json.sig
 python -m fishing_agent model load qwen2.5-vl-3b --manifest models.json
+python -m fishing_agent tui
+python -m fishing_agent gui
+python -m fishing_agent ipc-server /tmp/fishing-assistant.sock
 ```
 
 Semua perintah menerima `--lab <path>` sebagai pengganti variabel lingkungan.
+
+## Orchestrator — `assist` (bahasa alami)
+
+Perintah `assist` menjalankan alur **rencana → validasi → policy → eksekusi →
+verifikasi** di atas tool registry. Planner default deterministik (ID/EN) dan
+dapat diganti runtime LLM via `register_planner()`.
+
+```bash
+python -m fishing_agent assist "buat presentasi tentang Fishing OS"
+python -m fishing_agent assist "baca file /etc/hostname"
+python -m fishing_agent assist "jalankan git status"
+python -m fishing_agent assist "status paket" --print-plan   # cetak rencana JSON
+python -m fishing_agent assist --plan plan.json              # rencana eksplisit
+python -m fishing_agent assist "hapus file data.tmp" --approve
+python -m fishing_agent assist "install paket" --enable-admin
+```
+
+Kode keluar: `0` sukses, `1` gagal, `2` menunggu approval/autentikasi
+(ulangi dengan `--approve`/`--enable-admin`), `130` dibatalkan. File output
+relatif ditulis ke `workspace/` lab. Lihat `docs/ORCHESTRATOR.md` untuk kontrak
+tool, cara menambah tool, dan perencana.
 
 ## Skrip aksi
 
@@ -100,6 +130,22 @@ diberikan, detached signature GPG manifest diverifikasi lebih dulu dan
 fingerprint penanda tangan dicetak. `model load` menolak checksum yang salah,
 berkas yang hilang, atau status OOM, lalu melaporkan status
 `loaded`/`unloaded`/`missing`/`failed`.
+
+## Privilege Broker
+
+Operasi elevated tidak dijalankan langsung oleh Control Service. Jalankan broker
+di Unix socket dengan permission 0600 (hanya menerima UID yang sama):
+
+```bash
+python -m fishing_agent broker-serve --socket "$XDG_RUNTIME_DIR/fishing-broker.sock" --enable-admin
+python -m fishing_agent assist "install paket htop" --broker-socket "$XDG_RUNTIME_DIR/fishing-broker.sock" --approve
+```
+
+Broker memvalidasi payload (`command`, `args`, timeout, working directory), mewajibkan
+Administrator Mode aktif dan `sudo -n true` berhasil, lalu menjalankan perintah
+via `sudo`. Setiap permintaan, penolakan, dan hasil dicatat ke trace tanpa
+menyimpan password/token. Tanpa broker, langkah elevated berhenti pada
+`waiting_for_authentication` (fail closed).
 
 ## Penghentian
 
