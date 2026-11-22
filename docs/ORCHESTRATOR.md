@@ -215,3 +215,10 @@ fishing-assistant assist "<instruksi>" --enable-admin # aktifkan Administrator M
 
 Kode keluar: `0` sukses/ready, `1` gagal, `2` menunggu approval/autentikasi
 (jalankan ulang dengan `--approve`/`--enable-admin`), `130` dibatalkan.
+
+## 9. Artefak integrasi OS
+
+`packaging/assistant/` memuat launcher (`fishing-assistant`), entri desktop,
+systemd **user** service, `PKGBUILD`, dan `install.sh`. Semua **tidak** masuk
+Live ISO; guard `agent/tests/test_packaging_guard.py` memverifikasi artefak
+valid dan `profile/airootfs` bersih dari komponen Assistant.

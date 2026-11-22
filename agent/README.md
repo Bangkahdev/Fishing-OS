@@ -17,8 +17,10 @@ Status saat ini:
 - [x] Model manager — manifest, checksum, signature GPG, load/unload, status OOM
 - [x] GUI/TUI — adapter Tkinter dan TUI stdin/stdout di atas ControlService
 - [x] IPC persistent — Unix-domain socket untuk task lintas-interface
+- [x] Artefak paket OS (`packaging/assistant/`) + guard Live ISO
 - [] Runtime model lokal (VLM) dan benchmark hardware
 - [x] Grounding fallback visual — AT-SPI2 dahulu, describer VLM/Set-of-Mark pluggable
+- [] Integrasi opsi installer archinstall & repository signing
 - [] Interaksi UI kompleks (tabel, klik kanan, seleksi, font)
 - [] Evaluasi & fine-tuning opsional
 
