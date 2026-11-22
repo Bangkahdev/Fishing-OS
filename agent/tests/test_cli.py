@@ -123,6 +123,37 @@ class CliTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("GAGAL", out)
 
+    def test_assist_plan_dari_berkas_json(self):
+        run_cli(["init", "--lab", str(self.lab)])
+        plan = Path(self._tmp.name) / "plan.json"
+        plan.write_text(
+            json.dumps(
+                {"steps": [{"tool": "file.write", "arguments": {"path": "hasil.txt", "content": "halo"}}]}
+            ),
+            encoding="utf-8",
+        )
+        code, out, err = run_cli(["assist", "--lab", str(self.lab), "--plan", str(plan)])
+        self.assertEqual(code, 0, err)
+        self.assertIn("status: completed", out)
+        self.assertEqual((self.lab / "workspace" / "hasil.txt").read_text(encoding="utf-8"), "halo")
+
+    def test_assist_plan_tidak_valid_exit_1(self):
+        code, _out, err = run_cli(["assist", "--lab", str(self.lab), "--plan", "{bukan json"])
+        self.assertEqual(code, 1)
+        self.assertIn("rencana JSON tidak valid", err)
+
+    def test_assist_dry_run_exit_0(self):
+        run_cli(["init", "--lab", str(self.lab)])
+        plan = Path(self._tmp.name) / "plan.json"
+        plan.write_text(
+            json.dumps({"steps": [{"tool": "file.write", "arguments": {"path": "x.txt", "content": "x"}}]}),
+            encoding="utf-8",
+        )
+        code, out, err = run_cli(["assist", "--lab", str(self.lab), "--plan", str(plan), "--dry-run"])
+        self.assertEqual(code, 0, err)
+        self.assertIn("dry-run", out)
+        self.assertFalse((self.lab / "workspace" / "x.txt").exists())
+
     def test_tanpa_lab_menghasilkan_exit_1(self):
         with mock.patch.dict(os.environ, {}, clear=True):
             code, _out, err = run_cli(["init"])
@@ -155,6 +186,33 @@ class CliTest(unittest.TestCase):
         )
         self.assertEqual(code, 0, err)
         self.assertTrue(target.is_file())
+
+    def test_assist_print_plan(self):
+        run_cli(["init", "--lab", str(self.lab)])
+        code, out, err = run_cli(["assist", "buat presentasi tentang Fishing OS", "--lab", str(self.lab), "--print-plan"])
+        self.assertEqual(code, 0, err)
+        plan = json.loads(out)
+        self.assertEqual(plan["steps"][0]["tool"], "productivity.pptx")
+
+    def test_assist_run_markdown_completed(self):
+        run_cli(["init", "--lab", str(self.lab)])
+        code, out, err = run_cli(["assist", "buat dokumen laporan", "--lab", str(self.lab)])
+        self.assertEqual(code, 0, err)
+        self.assertIn("completed", out)
+        self.assertTrue(list((self.lab / "workspace").glob("*.md")))
+
+    def test_assist_plan_json(self):
+        run_cli(["init", "--lab", str(self.lab)])
+        plan = json.dumps({"summary": "uji", "steps": [{"tool": "command.run", "arguments": {"command": "python", "args": ["-c", "print(7)"]}}]})
+        code, out, err = run_cli(["assist", "--lab", str(self.lab), "--plan", plan])
+        self.assertEqual(code, 0, err)
+        self.assertIn("completed", out)
+
+    def test_assist_tanpa_instruksi_dan_plan_gagal(self):
+        run_cli(["init", "--lab", str(self.lab)])
+        code, _out, err = run_cli(["assist", "--lab", str(self.lab)])
+        self.assertEqual(code, 1)
+        self.assertIn("wajib diisi", err)
 
 
 if __name__ == "__main__":
