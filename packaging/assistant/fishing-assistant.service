@@ -1,0 +1,17 @@
+[Unit]
+Description=Fishing OS Computer-Use Assistant (control service)
+Documentation=file:///usr/share/doc/fishing-assistant/README.md
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+# Control plane berjalan sebagai user biasa (NFR-18); tidak pernah sebagai root.
+ExecStart=/usr/bin/python -m fishing_agent ipc-server %t/fishing-assistant.sock
+Restart=on-failure
+RestartSec=3
+# Kebijakan: model/service/GUI tidak otomatis memuat model besar saat login (NFR-06).
+# Assistant hanya berjalan sesuai permintaan pengguna melalui launcher GUI/TUI.
+
+[Install]
+WantedBy=default.target

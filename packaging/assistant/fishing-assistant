@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# fishing-assistant - launcher resmi Computer-Use Assistant Fishing OS.
+#
+# Menjalankan modul Python fishing_agent yang dipasang di
+# /usr/lib/fishing-assistant. Selalu berjalan sebagai user biasa; operasi
+# administratif meminta autentikasi native OS melalui sudo (NFR-18/20).
+set -euo pipefail
+
+PREFERRED_PYTHON="${FISHING_ASSISTANT_PYTHON:-python}"
+
+if ! command -v "$PREFERRED_PYTHON" >/dev/null 2>&1; then
+    echo "fishing-assistant: '$PREFERRED_PYTHON' tidak ditemukan; pasang paket python." >&2
+    exit 1
+fi
+
+export PYTHONPATH="/usr/lib/fishing-assistant${PYTHONPATH:+:$PYTHONPATH}"
+export FISHING_AI_LAB="${FISHING_AI_LAB:-$HOME/.local/share/fishing-assistant/lab}"
+
+exec "$PREFERRED_PYTHON" -m fishing_agent "$@"
