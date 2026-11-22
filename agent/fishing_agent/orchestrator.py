@@ -86,6 +86,7 @@ class Orchestrator:
         service: ControlService | None = None,
         lab: Any = None,
         administrator: AdministratorMode | None = None,
+        broker: Any = None,
         working_directory: str | None = None,
         dry_run: bool = False,
     ) -> None:
@@ -94,6 +95,7 @@ class Orchestrator:
         self.service = service or ControlService()
         self.policy = self.service.policy
         self.administrator = administrator or self.policy.administrator
+        self.broker = broker
         self.lab = lab
         self.working_directory = working_directory
         self.dry_run = dry_run
@@ -114,6 +116,7 @@ class Orchestrator:
             stop=stop,
             trace=trace,
             executor=executor,
+            broker=self.broker,
             file_tool=FileTool(),
             system_tool=SystemTool(executor.execute),
             working_directory=self.working_directory,
@@ -164,8 +167,11 @@ class Orchestrator:
             except ToolValidationError as exc:
                 raise OrchestratorError(f"langkah '{step.tool}' tidak valid: {exc}") from exc
             privilege = self._effective_privilege(spec, arguments)
-            if privilege == "elevated" and not self.administrator.active:
-                return _Blocked("authentication", f"langkah '{step.tool}' butuh Administrator Mode (autentikasi native OS)")
+            if privilege == "elevated":
+                if self.broker is None:
+                    return _Blocked("authentication", f"langkah '{step.tool}' butuh Privilege Broker (jalankan broker-serve dan hubungkan socket)")
+                if not self.administrator.active:
+                    return _Blocked("authentication", f"langkah '{step.tool}' butuh Administrator Mode (autentikasi native OS)")
             risk = spec.risk_for(arguments, context)
             needs_approval = risk == Risk.HIGH
             reasons: list[str] = []
