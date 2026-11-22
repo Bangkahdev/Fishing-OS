@@ -18,7 +18,7 @@ Status saat ini:
 - [x] GUI/TUI — adapter Tkinter dan TUI stdin/stdout di atas ControlService
 - [x] IPC persistent — Unix-domain socket untuk task lintas-interface
 - [] Runtime model lokal (VLM) dan benchmark hardware
-- [] Grounding fallback visual (VLM/Set-of-Mark)
+- [x] Grounding fallback visual — AT-SPI2 dahulu, describer VLM/Set-of-Mark pluggable
 - [] Interaksi UI kompleks (tabel, klik kanan, seleksi, font)
 - [] Evaluasi & fine-tuning opsional
 
