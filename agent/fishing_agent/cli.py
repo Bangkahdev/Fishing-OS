@@ -12,6 +12,7 @@ from pathlib import Path
 
 from .config import LAB_ENV, LabError, LabPaths
 from .command import CommandExecutor, CommandRequest
+from .broker import BrokerClient, BrokerIPCServer, PrivilegeBroker
 from .orchestrator import Orchestrator, RunReport
 from .planner import PlannerError, get_planner, plan_from_json
 from .registry import ToolContext, ToolRegistry
@@ -337,12 +338,14 @@ def _cmd_assist(args: argparse.Namespace) -> int:
 
     policy = PolicyGate(administrator)
     service = ControlService(policy=policy)
+    broker = BrokerClient(args.broker_socket) if args.broker_socket else None
     orchestrator = Orchestrator(
         _default_registry(),
         planner,
         service=service,
         lab=lab,
         administrator=administrator,
+        broker=broker,
         working_directory=str(lab.workspace),
     )
 
@@ -394,6 +397,35 @@ def _cmd_assist(args: argparse.Namespace) -> int:
         return EXIT_OK if report.status in (TaskState.COMPLETED, TaskState.READY) else EXIT_ERROR
     finally:
         os.chdir(previous_cwd)
+
+
+def _cmd_broker_serve(args: argparse.Namespace) -> int:
+    """Jalankan Privilege Broker di Unix socket terautentikasi (UID sama)."""
+    lab = _lab(args).ensure()
+    administrator = AdministratorMode()
+    if args.enable_admin:
+        if subprocess.run(["sudo", "-v"], check=False).returncode != 0:
+            print("autentikasi Administrator Mode gagal", file=sys.stderr)
+            return EXIT_ERROR
+        administrator.enable(args.admin_duration)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    trace_path = lab.logs / f"broker-{stamp}.jsonl"
+    with TraceWriter(trace_path) as trace:
+        broker = PrivilegeBroker(administrator, trace=trace, policy=PolicyGate(administrator))
+        server = BrokerIPCServer(args.socket, broker)
+        try:
+            server.start()
+        except Exception as exc:
+            print(f"broker tidak dapat dimulai: {exc}", file=sys.stderr)
+            return EXIT_ERROR
+        print(f"broker: {args.socket} | admin={'aktif' if administrator.active else 'nonaktif'}")
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            server.close()
+    return EXIT_OK
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -505,10 +537,18 @@ def build_parser() -> argparse.ArgumentParser:
     assist.add_argument("--task-id", default=None)
     assist.add_argument("--approve", action="store_true", help="setujui operasi berisiko tinggi/overwrite")
     assist.add_argument("--enable-admin", action="store_true", help="autentikasi Administrator Mode via sudo -v")
+    assist.add_argument("--broker-socket", help="socket Privilege Broker untuk operasi elevated")
     assist.add_argument("--admin-duration", type=float, default=900.0)
     assist.add_argument("--dry-run", action="store_true", help="validasi rencana tanpa eksekusi")
     assist.add_argument("--print-plan", action="store_true", help="cetak rencana (JSON) lalu keluar")
     assist.set_defaults(func=_cmd_assist)
+
+    broker = sub.add_parser("broker-serve", help="jalankan Privilege Broker di Unix socket")
+    broker.add_argument("--socket", required=True, help="path Unix-domain socket (mis. $XDG_RUNTIME_DIR/fishing-broker.sock)")
+    broker.add_argument("--lab", help=f"akar lab (default: ${LAB_ENV})")
+    broker.add_argument("--enable-admin", action="store_true", help="autentikasi Administrator Mode via sudo -v")
+    broker.add_argument("--admin-duration", type=float, default=900.0)
+    broker.set_defaults(func=_cmd_broker_serve)
 
     ipc = sub.add_parser("ipc-server", help="jalankan ControlService melalui Unix socket")
     ipc.add_argument("path", help="path Unix-domain socket")

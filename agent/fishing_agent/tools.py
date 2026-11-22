@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 from typing import Any, Mapping
 
+from .broker import BrokerError, PrivilegedRequest
 from .command import CommandRequest
 from .policy import Risk
 from .productivity import create_csv, create_markdown, create_pptx
@@ -42,8 +43,39 @@ def _build_command_request(arguments: Mapping[str, Any]) -> CommandRequest:
 
 
 def _cmd_command(arguments: Mapping[str, Any], context: ToolContext) -> StepOutcome:
-    executor = _require(context.executor, "executor")
     request = _build_command_request(arguments)
+    if request.privilege == "elevated":
+        broker = _require(context.broker, "broker")
+        try:
+            result = broker.execute(
+                PrivilegedRequest(
+                    command=request.command,
+                    args=tuple(request.args),
+                    working_directory=request.working_directory,
+                    timeout=request.timeout,
+                    reason="tool command.run elevated",
+                    task_id=context.task_id,
+                ),
+                approved=context.approved,
+            )
+        except BrokerError as exc:
+            raise ToolError(str(exc)) from exc
+        summary = result.summary or f"exit={result.returncode} cancelled={result.cancelled}"
+        return StepOutcome(
+            ok=result.ok,
+            summary=summary,
+            output="\n".join(part for part in (result.stdout, result.stderr) if part),
+            data={
+                "returncode": result.returncode,
+                "timed_out": result.timed_out,
+                "cancelled": result.cancelled,
+                "command": request.command,
+                "args": list(request.args),
+                "via": "privilege-broker",
+            },
+            returncode=result.returncode,
+        )
+    executor = _require(context.executor, "executor")
     result = executor.execute(request)
     summary = f"exit={result.returncode} timed_out={result.timed_out} truncated={result.truncated}"
     return StepOutcome(

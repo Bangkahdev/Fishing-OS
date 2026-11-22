@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from fishing_agent.broker import BrokerResult
 from fishing_agent.config import LabPaths
 from fishing_agent.orchestrator import Orchestrator
 from fishing_agent.planner import HeuristicPlanner, Plan, PlanStep
@@ -22,6 +23,15 @@ class _FixedPlanner:
         return self._plan
 
 
+class _FakeBroker:
+    def __init__(self):
+        self.requests = []
+
+    def execute(self, request, *, approved=False):
+        self.requests.append((request, approved))
+        return BrokerResult(ok=True, returncode=0, stdout="0\n", summary="exit=0")
+
+
 class OrchestratorTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -36,12 +46,13 @@ class OrchestratorTest(unittest.TestCase):
         os.chdir(self._cwd)
         self._tmp.cleanup()
 
-    def _orch(self, planner=None, approved=False, dry_run=False):
+    def _orch(self, planner=None, approved=False, dry_run=False, administrator=None, broker=None):
         return Orchestrator(
             self.registry,
             planner or HeuristicPlanner(),
             lab=self.lab,
-            administrator=AdministratorMode(),
+            administrator=administrator or AdministratorMode(),
+            broker=broker,
             dry_run=dry_run,
         )
 
@@ -96,6 +107,26 @@ class OrchestratorTest(unittest.TestCase):
         plan = self._plan(("command.run", {"command": "id", "privilege": "elevated"}))
         report = self._orch(_FixedPlanner(plan)).run("uji", task_id="t-auth")
         self.assertEqual(report.status, TaskState.WAITING_FOR_AUTHENTICATION)
+
+    def test_elevated_tanpa_broker_tetap_menunggu_autentikasi(self):
+        administrator = AdministratorMode()
+        administrator.enable(60)
+        plan = self._plan(("command.run", {"command": "id", "privilege": "elevated"}))
+        report = self._orch(_FixedPlanner(plan), administrator=administrator).run("uji", task_id="t-nobroker")
+        self.assertEqual(report.status, TaskState.WAITING_FOR_AUTHENTICATION)
+        self.assertIn("Privilege Broker", report.summary)
+
+    def test_elevated_lewat_broker_completed(self):
+        administrator = AdministratorMode()
+        administrator.enable(60)
+        broker = _FakeBroker()
+        plan = self._plan(("command.run", {"command": "id", "args": ["-u"], "privilege": "elevated"}))
+        report = self._orch(_FixedPlanner(plan), administrator=administrator, broker=broker).run(
+            "uji", task_id="t-broker"
+        )
+        self.assertEqual(report.status, TaskState.COMPLETED)
+        self.assertEqual(len(broker.requests), 1)
+        self.assertEqual(broker.requests[0][0].command, "id")
 
     # -- kegagalan / pembatalan ---------------------------------------------
 

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Fishing OS Assistant
+GenericName=Computer-Use Assistant
+Comment=Asisten AI lokal untuk mengelola perangkat Fishing OS
+Exec=/usr/bin/fishing-assistant gui
+Icon=fishing-os
+Terminal=false
+Categories=Utility;System;
+Keywords=assistant;ai;computer-use;fishing;
+StartupNotify=true
