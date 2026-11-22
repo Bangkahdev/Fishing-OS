@@ -38,6 +38,7 @@ NFR-27).
 | `tools.py` | Tool bawaan: `command.run`, `file.list/read/search/write/delete`, `system.inspect`, `productivity.markdown/pptx/csv`. |
 | `planner.py` | `Plan`/`PlanStep`, protokol `Planner`, `HeuristicPlanner` deterministik (ID/EN), `get_planner`/`register_planner`. |
 | `orchestrator.py` | `Orchestrator.run()`: perencanaan, preflight, eksekusi, verifikasi, state, audit, cancellation. |
+| `perception.py` | `Grounder`: AT-SPI2 dahulu, fallback visual via `VisualDescriber` (VLM/Set-of-Mark) yang pluggable. |
 | `cli.py` | Subcommand `assist` (plus `--planner`, `--print-plan`, `--plan`, `--approve`, `--enable-admin`, `--dry-run`). |
 
 ## 3. Tool Registry dan kontrak tool
@@ -166,7 +167,28 @@ Format `Plan` (JSON) yang dapat dipakai via `--plan`:
 }
 ```
 
-## 6. State machine & audit
+## 6. Perception / UI grounding
+
+`Grounder.ground(role=None, name=None, app_id=None)`:
+
+1. **AT-SPI2** (`atspi.available`): cari elemen via `find_elements`; kembalikan
+   `GroundingResult(source="atspi", ...)`.
+2. **Fallback visual** bila AT-SPI2 tidak menemukan: tangkap layar
+   (`ScreenshotCapture`) lalu minta `VisualDescriber.describe(image)` yang
+   mengembalikan kandidat `VisualTarget` (mis. Set-of-Mark). `Grounder`
+   memilih kandidat terbaik berdasarkan kecocokan `name`/`role` + confidence.
+3. Bila keduanya tidak tersedia: `GroundingResult(source="none", ...)` sehingga
+   pemanggil melaporkan keterbatasan (tidak mengklaim sukses).
+
+Describer default `UnavailableDescriber` (VLM belum dipaketkan). Untuk mengaktifkan
+fallback nyata:
+
+```python
+grounder = Grounder()
+grounder.set_describer(MyVLM())   # objek dengan .describe(path) -> list[VisualTarget]
+```
+
+## 7. State machine & audit
 
 Orchestrator memakai `ControlService` (state tunggal) dan `TraceWriter` (audit):
 
@@ -180,7 +202,7 @@ STOPPED -> STARTING -> READY -> PLANNING -> [WAITING_FOR_AUTHENTICATION | WAITIN
 - Cancellation diperiksa sebelum tiap langkah (stop file / sinyal / Ctrl+C);
   proses anak yang dapat dihentikan dibersihkan (tidak menjanjikan rollback).
 
-## 7. CLI `assist`
+## 8. CLI `assist`
 
 ```bash
 fishing-assistant assist "<instruksi>"         # jalankan (planner heuristic)
