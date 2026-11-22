@@ -13,13 +13,34 @@ Tanggal pemeriksaan terakhir: 22 November 2026.
 | Fase SRS | Status | Bukti |
 |---|---|---|
 | Phase 0 — integrasi OS | Sebagian | Struktur `agent/` dan CI test sudah ada; paket resmi dan installer optional belum terintegrasi. |
-| Phase 1 — control plane | Fondasi selesai | `service.py`, `task.py`, `policy.py`, `trace.py`, cancellation, IPC local, dan 56 unit test. |
-| Phase 2 — command/system capability | Fondasi selesai | `command.py`, `files.py`, `system.py`, privilege gate, dan audit redaction. |
+| Phase 1 — control plane | Fondasi selesai | `service.py`, `task.py`, `policy.py`, `trace.py`, cancellation, IPC local, **orchestrator + tool registry + planner** (`orchestrator.py`, `registry.py`, `tools.py`, `planner.py`), dan unit test. |
+| Phase 2 — command/system capability | Fondasi selesai | `command.py`, `files.py`, `system.py`, privilege gate, audit redaction, dan tool bawaan registry. |
 | Phase 3 — productivity | Fondasi selesai | `productivity.py` untuk Markdown, CSV, dan PPTX OOXML minimal. |
 | Phase 4 — desktop automation | Fondasi sebagian | Backend X11/Wayland, aksi atomik, penelusuran dan aksi AT-SPI2 via pyatspi, screenshot grim/import, verifikasi pasca-aksi, serta aksi skrip `ui_action`; uji pada sesi Hyprland Fishing OS belum. |
-| Phase 5 — hybrid AI | Fondasi selesai | `model_manager.py`: manifest, checksum SHA-256, verifikasi detached signature GPG, load/unload, status OOM/missing; runtime inferensi dan pilihan model belum dikunci. |
-| Phase 6 — GUI/TUI | Fondasi selesai | CLI, TUI stdio, GUI Tkinter adapter, dan Unix IPC control plane tersedia; integrasi launcher desktop GUI/TUI masih perlu dirilis. |
+| Phase 5 — hybrid AI | Fondasi selesai | `model_manager.py`: manifest, checksum SHA-256, verifikasi detached signature GPG, load/unload, status OOM/missing; **planner deterministik** sebagai fallback offline; runtime inferensi LLM/VLM dan pilihan model belum dikunci. |
+| Phase 6 — GUI/TUI | Fondasi selesai | CLI (termasuk `assist`), TUI stdio, GUI Tkinter adapter, dan Unix IPC control plane tersedia; integrasi launcher desktop GUI/TUI masih perlu dirilis. |
 | Phase 7 — release hardening | Sebagian | Paket/model signing dan audit Live ISO tersedia; paket resmi, installer option, dan release matrix masih perlu integrasi. |
+
+## Alur orchestrator (baru)
+
+Komponen inti SRS §3.2 kini terlaksana dan dapat dijalankan lewat `fishing-assistant assist`:
+
+```
+instruksi -> Planner (rencana) -> ToolRegistry (validasi argumen)
+          -> PolicyGate (privilege/approval) -> handler (command/file/system/productivity)
+          -> verifikasi hasil -> ControlService (state + audit)
+```
+
+Lihat `docs/ORCHESTRATOR.md` untuk kontrak tool, cara menambah tool, dan perencana. Contoh:
+
+```bash
+fishing-assistant assist "buat presentasi tentang Fishing OS"
+fishing-assistant assist "baca file /etc/hostname"
+fishing-assistant assist "jalankan git status"
+fishing-assistant assist "status paket" --print-plan     # lihat rencana (JSON)
+fishing-assistant assist "hapus file data.tmp" --approve # operasi berisiko tinggi
+fishing-assistant assist --plan plan.json                # jalankan rencana eksplisit
+```
 
 ## Struktur modul
 
@@ -30,6 +51,10 @@ Tanggal pemeriksaan terakhir: 22 November 2026.
 | `policy.py` | Risk classification, approval, dan Administrator Mode tanpa menyimpan password. |
 | `task.py` | State machine task yang dipakai control plane. |
 | `service.py` | Registry task, transisi state, approval, cancellation, dan event audit bersama interface. |
+| `registry.py` | **Tool registry**: `ToolSpec`, validasi argumen subset JSON Schema, `ToolContext`, `StepOutcome`, dispatch handler. |
+| `tools.py` | **Tool bawaan** yang membungkus command/file/system/productivity dengan risiko dari `PolicyGate`. |
+| `planner.py` | **Perencana**: `Plan`/`PlanStep`, protokol `Planner`, `HeuristicPlanner` deterministik (ID/EN), `get_planner`. |
+| `orchestrator.py` | **Orchestrator**: instruksi -> rencana -> validasi -> policy -> eksekusi -> verifikasi, dengan state/audit/cancellation. |
 | `ipc.py` | JSON-line Unix-domain socket client/server untuk mengakses `ControlService` secara lokal. |
 | `trace.py` | JSONL audit lokal dan redaksi field credential. |
 | `files.py` | File operation system-wide, batas ukuran, canonical path lexical, dan perlindungan symlink. |
@@ -53,6 +78,10 @@ Jalankan dari direktori `agent`:
 ```bash
 python -m unittest discover -s tests -v
 python -m fishing_agent init --lab C:\temp\fishing-lab
+python -m fishing_agent assist "buat presentasi tentang Fishing OS" --lab C:\temp\fishing-lab
+python -m fishing_agent assist "baca file /etc/hostname" --lab C:\temp\fishing-lab
+python -m fishing_agent assist "status paket" --lab C:\temp\fishing-lab --print-plan
+python -m fishing_agent assist --lab C:\temp\fishing-lab --plan plan.json
 python -m fishing_agent command --lab C:\temp\fishing-lab python -- -c "print(123)"
 python -m fishing_agent file metadata C:\Windows\System32\notepad.exe
 python -m fishing_agent system network status --lab C:\temp\fishing-lab
@@ -102,14 +131,21 @@ transport karena target produk adalah Fishing OS/Linux.
 6. Cancellation menghentikan proses yang dapat dihentikan, tetapi tidak
    menjanjikan rollback.
 7. Artefak productivity ditulis lokal dan PPTX divalidasi sebagai ZIP/XML.
+8. **Planner hanya menghasilkan rencana**; `ToolRegistry` memvalidasi argumen
+   terhadap schema sebelum handler dijalankan. Tidak ada eksekusi langsung dari
+   output model (lihat `docs/ORCHESTRATOR.md`).
+9. Operasi berisiko tinggi (mis. `mkfs`, `rm -rf`, `file.delete`) dan penulisan
+   yang menimpa berkas yang sudah ada memerlukan approval eksplisit sebelum
+   dijalankan; operasi elevated memerlukan Administrator Mode aktif.
 
 ## Verifikasi
 
-Test suite saat ini berisi 123 test yang mencakup command contract, policy, task
+Test suite saat ini berisi 167 test yang mencakup command contract, policy, task
 state, service, filesystem, system adapter, productivity output, action
 executor, trace, configuration, stop behavior, AT-SPI2, screenshot, verifikasi
-pasca-aksi, dan model manager termasuk signature GPG. Setiap perubahan modul
-harus menambahkan test fokus di `agent/tests/` dan menjalankan:
+pasca-aksi, model manager termasuk signature GPG, serta **tool registry + schema
+validation, planner, dan orchestrator**. Setiap perubahan modul harus
+menambahkan test fokus di `agent/tests/` dan menjalankan:
 
 ```bash
 cd agent
@@ -123,15 +159,16 @@ dan menghentikan rilis bila komponen Assistant ditemukan.
 
 ## Pekerjaan berikutnya
 
-1. Tambahkan adapter GUI/TUI yang memakai IPC lokal dan bukan executor sendiri.
-2. Integrasikan package group Assistant, installer optional, repository signing,
-   dan audit bahwa Live ISO tidak membawa Assistant.
+1. Hubungkan GUI/TUI ke `ControlService` via IPC lokal (bukan membuat
+   ControlService lokal sendiri), agar satu task terlihat lintas-interface
+   (FR-23).
+2. Integrasikan paket resmi Assistant, opsi installer archinstall, dan
+   repository signing (Phase 0/7).
 3. Tambahkan integration/black-box test pada Fishing OS Linux; test Windows
    lokal hanya memverifikasi kontrak dan artefak yang portable.
-4. Uji AT-SPI2 dan input Wayland pada sesi Hyprland Fishing OS nyata; fallback
-   VLM/Set-of-Mark belum diimplementasikan.
-5. Runtime inferensi LLM/VLM: pilihan model, kuantisasi, offload, dan benchmark
-   RAM/VRAM pada hardware referensi.
+4. Uji AT-SPI2 dan input Wayland pada sesi Hyprland Fishing OS nyata.
+5. Runtime inferensi LLM/VLM: pilih model, kuantisasi, offload, dan benchmark
+   RAM/VRAM pada hardware referensi; sambungkan via `register_planner()`.
 
 ## Kebijakan perubahan
 

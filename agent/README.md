@@ -13,11 +13,12 @@ Status saat ini:
 - [x] Phase 2 — command executor `argv`, `shell`, `script`, `interactive`
 - [x] Backend input desktop dan dry-run
 - [x] Perception — penelusuran dan aksi AT-SPI2 via pyatspi, tangkapan layar grim/import, verifikasi state
+- [x] Orchestrator + tool registry + planner — instruksi bahasa alami → rencana → validasi schema → policy → eksekusi → verifikasi
 - [x] Model manager — manifest, checksum, signature GPG, load/unload, status OOM
 - [x] GUI/TUI — adapter Tkinter dan TUI stdin/stdout di atas ControlService
 - [x] IPC persistent — Unix-domain socket untuk task lintas-interface
 - [] Runtime model lokal (VLM) dan benchmark hardware
-- [] Tool dokumen & presentasi (`.pptx`)
+- [] Grounding fallback visual (VLM/Set-of-Mark)
 - [] Interaksi UI kompleks (tabel, klik kanan, seleksi, font)
 - [] Evaluasi & fine-tuning opsional
 
@@ -53,6 +54,27 @@ python -m fishing_agent ipc-server /tmp/fishing-assistant.sock
 ```
 
 Semua perintah menerima `--lab <path>` sebagai pengganti variabel lingkungan.
+
+## Orchestrator — `assist` (bahasa alami)
+
+Perintah `assist` menjalankan alur **rencana → validasi → policy → eksekusi →
+verifikasi** di atas tool registry. Planner default deterministik (ID/EN) dan
+dapat diganti runtime LLM via `register_planner()`.
+
+```bash
+python -m fishing_agent assist "buat presentasi tentang Fishing OS"
+python -m fishing_agent assist "baca file /etc/hostname"
+python -m fishing_agent assist "jalankan git status"
+python -m fishing_agent assist "status paket" --print-plan   # cetak rencana JSON
+python -m fishing_agent assist --plan plan.json              # rencana eksplisit
+python -m fishing_agent assist "hapus file data.tmp" --approve
+python -m fishing_agent assist "install paket" --enable-admin
+```
+
+Kode keluar: `0` sukses, `1` gagal, `2` menunggu approval/autentikasi
+(ulangi dengan `--approve`/`--enable-admin`), `130` dibatalkan. File output
+relatif ditulis ke `workspace/` lab. Lihat `docs/ORCHESTRATOR.md` untuk kontrak
+tool, cara menambah tool, dan perencana.
 
 ## Skrip aksi
 
