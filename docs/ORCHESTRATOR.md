@@ -39,7 +39,27 @@ NFR-27).
 | `planner.py` | `Plan`/`PlanStep`, protokol `Planner`, `HeuristicPlanner` deterministik (ID/EN), `get_planner`/`register_planner`. |
 | `orchestrator.py` | `Orchestrator.run()`: perencanaan, preflight, eksekusi, verifikasi, state, audit, cancellation. |
 | `perception.py` | `Grounder`: AT-SPI2 dahulu, fallback visual via `VisualDescriber` (VLM/Set-of-Mark) yang pluggable. |
-| `cli.py` | Subcommand `assist` (plus `--planner`, `--print-plan`, `--plan`, `--approve`, `--enable-admin`, `--dry-run`). |
+| `broker.py` | `PrivilegeBroker` + IPC Unix terautentikasi (`BrokerIPCServer`/`BrokerClient`): validasi payload, sudo native, audit, cancellation. |
+| `cli.py` | Subcommand `assist` (plus `--planner`, `--print-plan`, `--plan`, `--approve`, `--enable-admin`, `--broker-socket`, `--dry-run`) dan `broker-serve`. |
+
+## 2.1 Privilege Broker (NFR-19, FR-27/32/33)
+
+Operasi `privilege="elevated"` **wajib** melewati `PrivilegeBroker`; tanpa broker
+orchestrator berhenti pada `waiting_for_authentication` (fail closed).
+
+```bash
+python -m fishing_agent broker-serve --socket "$XDG_RUNTIME_DIR/fishing-broker.sock" --enable-admin
+python -m fishing_agent assist "install paket htop" --broker-socket "$XDG_RUNTIME_DIR/fishing-broker.sock"
+```
+
+- `BrokerIPCServer` hanya menerima koneksi dari UID yang sama (`SO_PEERCRED`),
+  socket `0600`, pesan JSON dibatasi 64 KiB.
+- `PrivilegedRequest` menolak kunci asing, NUL, tipe salah, dan timeout tidak valid.
+- Broker mewajibkan Administrator Mode aktif dan `sudo -n true` berhasil; perintah
+  dijalankan dengan `sudo -- argv` (bukan root shell).
+- Audit mencatat permintaan, penolakan, dan hasil tanpa password/token; cancellation
+  meneruskan `StopRequested` sebagai hasil `cancelled`.
+- Broker tidak berjalan sebagai root dan tidak mengubah sudoers/NOPASSWD.
 
 ## 3. Tool Registry dan kontrak tool
 
@@ -106,6 +126,7 @@ Handler menerima `ToolContext` agar tidak membuat executor sendiri:
 | `stop` | `StopController` (cancellation) |
 | `trace` | `TraceWriter` (audit JSONL) |
 | `executor` | `CommandExecutor` |
+| `broker` | `PrivilegeBroker` (wajib untuk langkah `privilege="elevated"`) |
 | `file_tool` | `FileTool` |
 | `system_tool` | `SystemTool` |
 | `approved` | bool approval untuk task ini |

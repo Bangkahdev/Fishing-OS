@@ -17,6 +17,7 @@ Status saat ini:
 - [x] Model manager — manifest, checksum, signature GPG, load/unload, status OOM
 - [x] GUI/TUI — adapter Tkinter dan TUI stdin/stdout di atas ControlService
 - [x] IPC persistent — Unix-domain socket untuk task lintas-interface
+- [x] Privilege Broker — IPC Unix terautentikasi (UID sama), validasi payload, sudo native, audit
 - [x] Artefak paket OS (`packaging/assistant/`) + guard Live ISO
 - [] Runtime model lokal (VLM) dan benchmark hardware
 - [x] Grounding fallback visual — AT-SPI2 dahulu, describer VLM/Set-of-Mark pluggable
@@ -129,6 +130,22 @@ diberikan, detached signature GPG manifest diverifikasi lebih dulu dan
 fingerprint penanda tangan dicetak. `model load` menolak checksum yang salah,
 berkas yang hilang, atau status OOM, lalu melaporkan status
 `loaded`/`unloaded`/`missing`/`failed`.
+
+## Privilege Broker
+
+Operasi elevated tidak dijalankan langsung oleh Control Service. Jalankan broker
+di Unix socket dengan permission 0600 (hanya menerima UID yang sama):
+
+```bash
+python -m fishing_agent broker-serve --socket "$XDG_RUNTIME_DIR/fishing-broker.sock" --enable-admin
+python -m fishing_agent assist "install paket htop" --broker-socket "$XDG_RUNTIME_DIR/fishing-broker.sock" --approve
+```
+
+Broker memvalidasi payload (`command`, `args`, timeout, working directory), mewajibkan
+Administrator Mode aktif dan `sudo -n true` berhasil, lalu menjalankan perintah
+via `sudo`. Setiap permintaan, penolakan, dan hasil dicatat ke trace tanpa
+menyimpan password/token. Tanpa broker, langkah elevated berhenti pada
+`waiting_for_authentication` (fail closed).
 
 ## Penghentian
 
