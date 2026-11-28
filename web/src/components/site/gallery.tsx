@@ -2,12 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 import { ChevronLeftIcon, ChevronRightIcon, ExpandIcon, XIcon } from "lucide-react"
 import { cn } from "cn"
 import { Section } from "@/components/section"
-import {
-  screenshots,
-  webpSrc,
-  webpSrcSet,
-  type Screenshot,
-} from "@/lib/site"
+import { screenshots, webpSrc, webpSrcSet, type Screenshot } from "@/lib/site"
 
 const SIZES =
   "(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
@@ -30,15 +25,13 @@ function Shot({
       onClick={onClick}
       aria-label={`Perbesar: ${shot.title}`}
       className={cn(
-        "group relative block w-full overflow-hidden rounded-xl border border-border/80 bg-muted text-left transition-colors duration-300 hover:border-primary/30 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
-        className
+        "group relative block w-full overflow-hidden rounded-2xl border border-border bg-card p-1 text-left transition-all duration-300 hover:border-primary/40 hover:shadow-[0_0_0_1px_var(--primary)] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+        className,
       )}
     >
       {failed ? (
-        <div className={cn("grid place-items-center bg-muted", frame)}>
-          <span className="font-mono text-xs text-muted-foreground">
-            {shot.title}
-          </span>
+        <div className={cn("grid place-items-center rounded-lg bg-secondary", frame)}>
+          <span className="font-mono text-xs text-muted-foreground">{shot.title}</span>
         </div>
       ) : (
         <picture className="block">
@@ -50,15 +43,11 @@ function Shot({
             width={shot.width}
             height={shot.height}
             onError={() => setFailed(true)}
-            className={cn(
-              "block w-full object-cover",
-              shot.wide && "object-contain",
-              frame
-            )}
+            className={cn("block w-full rounded-lg object-cover", shot.wide && "object-contain", frame)}
           />
         </picture>
       )}
-      <span className="absolute top-2.5 right-2.5 grid size-7 place-items-center rounded-md bg-black/55 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+      <span className="absolute top-2.5 right-2.5 grid size-7 place-items-center rounded-md bg-black/60 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
         <ExpandIcon className="size-3.5" />
       </span>
     </button>
@@ -71,11 +60,11 @@ export function Gallery() {
   const close = useCallback(() => setIndex(null), [])
   const next = useCallback(
     () => setIndex((i) => (i === null ? i : (i + 1) % screenshots.length)),
-    []
+    [],
   )
   const prev = useCallback(
     () => setIndex((i) => (i === null ? i : (i - 1 + screenshots.length) % screenshots.length)),
-    []
+    [],
   )
 
   useEffect(() => {
@@ -99,17 +88,18 @@ export function Gallery() {
 
   return (
     <Section
-      id="screenshot"
-      title="Dijalankan di VirtualBox, bukan mockup"
-      description="Semua tangkapan layar diambil dari ISO rilis yang dijalankan di mesin virtual 4 GB RAM: menu boot, desktop setelah autologin, hingga alat di terminal."
+      id="tangkapan-layar"
+      title="Dijalankan di mesin virtual, bukan mockup"
+      description="Tangkapan layar diambil dari Fishing OS yang berjalan di mesin virtual 4 GB RAM."
+      bordered
     >
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {screenshots.map((s, i) => (
           <figure key={s.src} className="flex min-w-0 flex-col gap-2.5">
             <Shot shot={s} onClick={() => setIndex(i)} />
-            <figcaption className="mt-2.5 text-[13px] leading-relaxed text-pretty text-muted-foreground">
+            <figcaption className="text-[13px] leading-relaxed text-pretty text-muted-foreground">
               <span className="font-medium text-foreground">{s.title}</span>
-              <span aria-hidden> — </span>
+              <span aria-hidden> - </span>
               {s.caption}
             </figcaption>
           </figure>

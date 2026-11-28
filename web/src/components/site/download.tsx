@@ -58,8 +58,7 @@ export function Download() {
     key: "ci-key.asc",
   }
 
-  const sizeOf = (name: string) =>
-    release?.assets.find((a) => a.name === name)?.size ?? 0
+  const sizeOf = (name: string) => release?.assets.find((a) => a.name === name)?.size ?? 0
 
   return (
     <Section
@@ -72,11 +71,11 @@ export function Download() {
           <CardHeader>
             <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-[13px] text-muted-foreground">
               <span className="font-medium text-foreground">Rilis terbaru</span>
-              <span aria-hidden>·</span>
+              <span aria-hidden>/</span>
               <span className="font-mono text-xs">v{version}</span>
               {release?.publishedAt && (
                 <>
-                  <span aria-hidden>·</span>
+                  <span aria-hidden>/</span>
                   <span className="text-xs">
                     {new Date(release.publishedAt).toLocaleDateString("id-ID", {
                       day: "numeric",
@@ -96,7 +95,10 @@ export function Download() {
             <div className="flex flex-wrap gap-2">
               <a
                 href={assetUrl(version, assets.iso)}
-                className={cn(buttonVariants({ size: "lg" }), "h-11 gap-2 px-5 text-sm")}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "h-11 gap-2 rounded-lg px-5 text-sm",
+                )}
               >
                 <DownloadIcon className="size-4" />
                 Unduh ISO
@@ -112,7 +114,7 @@ export function Download() {
                 rel="noreferrer"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
-                  "h-11 px-5 text-sm"
+                  "h-11 rounded-lg px-5 text-sm",
                 )}
               >
                 Catatan rilis
@@ -127,10 +129,7 @@ export function Download() {
               </h3>
               <ul className="mt-2 divide-y divide-border/60">
                 {rows.map((r) => (
-                  <li
-                    key={r.key}
-                    className="flex items-center gap-3 py-2.5"
-                  >
+                  <li key={r.key} className="flex items-center gap-3 py-2.5">
                     <div className="min-w-0 flex-1">
                       <a
                         href={assetUrl(version, assets[r.key])}

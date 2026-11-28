@@ -62,6 +62,7 @@ class ToolContext:
     stop: Any
     trace: Any = None
     executor: Any = None
+    broker: Any = None
     file_tool: Any = None
     system_tool: Any = None
     working_directory: str | None = None

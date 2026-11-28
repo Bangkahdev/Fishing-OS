@@ -10,35 +10,40 @@ export function Hero() {
   const version = release?.version ?? site.fallbackVersion
   const [shotOk, setShotOk] = useState(true)
 
-  const specs = [
-    `rilis ${version}`,
-    "Arch Linux x86_64",
-    "\u2264 2000 MiB",
-    "BIOS + UEFI",
-    site.license,
-  ]
-
   return (
     <section
       id="atas"
-      className="relative overflow-x-clip border-b border-border/60 bg-accent/25 dark:bg-accent/15"
+      className="relative overflow-hidden border-b border-border bg-background"
     >
-      <div className="grid w-full gap-10 px-4 pt-14 pb-14 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:px-12 lg:pt-20 lg:pb-20">
+      <div
+        aria-hidden
+        className="grid-bg pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(75%_55%_at_50%_0%,black,transparent)]"
+      />
+      <div aria-hidden className="glow pointer-events-none absolute inset-x-0 top-0 h-[460px]" />
+      <div className="relative mx-auto grid w-full max-w-screen-2xl gap-10 px-4 pt-14 pb-16 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-14 lg:px-8 lg:pt-24 lg:pb-24">
         <div className="min-w-0">
-          <h1 className="text-[2.35rem] leading-[1.06] font-semibold tracking-tight text-balance sm:text-5xl lg:text-[3.6rem]">
-            Satu USB, semua alat programmer siap pakai.
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1 text-xs font-semibold text-primary uppercase tracking-wider">
+            Rilis v{version}
+          </span>
+
+          <h1 className="mt-5 text-[2.5rem] leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-[4rem]">
+            Satu USB,<br />
+            <span className="text-primary">toolchain programmer siap pakai.</span>
           </h1>
 
-          <p className="mt-5 max-w-xl text-[15.5px] leading-relaxed text-pretty text-muted-foreground sm:text-base">
-            {site.description}
+          <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-pretty text-muted-foreground sm:text-lg">
+            Live/rescue ISO berbasis Arch Linux untuk pengembang. Jalankan LiveOS
+            dari USB atau mesin virtual, atau siapkan instalasi Arch lewat menu
+            Installer to disk. Setiap rilis ditandatangani GPG dan disertai
+            checksum SHA-256.
           </p>
 
-          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
+          <div className="mt-10 flex flex-wrap items-center gap-4">
             <a
               href={assetUrl(version, isoName(version))}
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "h-11 gap-2 rounded-lg px-5 text-sm"
+                "h-12 gap-2 rounded-lg px-6 text-sm font-medium",
               )}
             >
               <DownloadIcon className="size-4" />
@@ -46,46 +51,56 @@ export function Hero() {
             </a>
             <a
               href="#mulai"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "h-12 gap-2 rounded-lg px-6 text-sm font-medium",
+              )}
             >
-              Cara menjalankan
-              <ArrowRightIcon className="size-3.5" />
+              Cara menjalankan <ArrowRightIcon className="size-4" />
             </a>
           </div>
 
-          <p className="mt-8 flex flex-wrap gap-x-3 gap-y-1 border-t border-border/70 pt-4 font-mono text-xs leading-relaxed text-muted-foreground">
-            {specs.map((spec) => (
-              <span key={spec}>{spec}</span>
-            ))}
+          <p className="mt-12 flex flex-wrap gap-x-3 gap-y-2 border-t border-border pt-6 font-mono text-xs leading-relaxed text-muted-foreground">
+            {["v" + version, "Arch Linux x86_64", "≤ 2000 MiB", "BIOS + UEFI", site.license].map(
+              (spec) => (
+                <span key={spec}>{spec}</span>
+              ),
+            )}
           </p>
         </div>
 
-        <figure className="min-w-0">
-          {shotOk ? (
-            <picture>
-              <source
-                type="image/webp"
-                srcSet="/screenshots/02-desktop-480.webp 480w, /screenshots/02-desktop-768.webp 768w, /screenshots/02-desktop-1024.webp 1024w"
-                sizes="(min-width: 1024px) 45vw, 100vw"
-              />
-              <img
-                src="/screenshots/02-desktop.png"
-                alt="Desktop XFCE Fishing OS setelah boot otomatis sebagai liveuser"
-                width={1024}
-                height={768}
-                fetchPriority="high"
-                decoding="async"
-                onError={() => setShotOk(false)}
-                className="block w-full rounded-lg border border-border/80"
-              />
-            </picture>
-          ) : (
-            <div className="grid aspect-[4/3] place-items-center rounded-lg border border-border/80 bg-brand-deep">
-              <span className="font-mono text-sm text-white/80">Fishing OS</span>
-            </div>
-          )}
-          <figcaption className="mt-2.5 font-mono text-xs text-muted-foreground">
-            Desktop XFCE setelah autologin · rilis {version}
+        <figure className="relative mx-auto w-full min-w-0 max-w-lg lg:mx-0 lg:justify-self-end">
+          <div
+            aria-hidden
+            className="absolute -inset-3 -z-10 rounded-3xl bg-gradient-to-tr from-primary/25 via-brand-mid/10 to-transparent blur-2xl"
+          />
+          <div className="rounded-2xl border border-border bg-card p-1.5 shadow-2xl ring-1 ring-black/5">
+            {shotOk ? (
+              <picture>
+                <source
+                  type="image/webp"
+                  srcSet="/screenshots/02-desktop-480.webp 480w, /screenshots/02-desktop-768.webp 768w, /screenshots/02-desktop-1024.webp 1024w"
+                  sizes="(min-width: 1024px) 45vw, 100vw"
+                />
+                <img
+                  src="/screenshots/02-desktop.png"
+                  alt="Desktop XFCE Fishing OS setelah boot otomatis sebagai liveuser"
+                  width={1024}
+                  height={768}
+                  fetchPriority="high"
+                  decoding="async"
+                  onError={() => setShotOk(false)}
+                  className="block w-full rounded-xl"
+                />
+              </picture>
+            ) : (
+              <div className="grid aspect-[4/3] place-items-center rounded-xl bg-secondary">
+                <span className="font-mono text-sm text-muted-foreground">Fishing OS</span>
+              </div>
+            )}
+          </div>
+          <figcaption className="mt-4 text-center text-[12px] font-mono text-muted-foreground">
+            Contoh desktop XFCE setelah autologin sebagai liveuser.
           </figcaption>
         </figure>
       </div>

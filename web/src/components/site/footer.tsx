@@ -1,31 +1,39 @@
+import { Link } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { GithubMark } from "@/components/github-mark"
 import { site } from "@/lib/site"
 
 const YEAR = new Date().getFullYear()
 
-const columns = [
+const columns: {
+  title: string
+  links: { label: string; href: string; route?: boolean }[]
+}[] = [
   {
     title: "Proyek",
     links: [
       { label: "Repositori", href: site.repo },
       { label: "Rilis", href: site.releases },
       { label: "Issues", href: site.issues },
+      { label: "Blog", href: "/blog/", route: true },
+      { label: "Tentang", href: "/about", route: true },
     ],
   },
   {
     title: "Dokumentasi",
     links: [
-      { label: "README", href: `${site.repo}#readme` },
-      { label: "Membangun ISO", href: `${site.repo}#membangun-iso` },
-      { label: "CI/CD", href: `${site.repo}#cicd-dan-rilis` },
-      { label: "Struktur repo", href: `${site.repo}#struktur-repositori` },
+      { label: "Portal dokumentasi", href: "/docs/", route: true },
+      { label: "Kapan memakai", href: "/docs/use-cases/", route: true },
+      { label: "Unduh & verifikasi", href: "/docs/download/", route: true },
+      { label: "Jalankan LiveOS", href: "/docs/liveos/", route: true },
+      { label: "Installer ke disk", href: "/docs/installation/", route: true },
+      { label: "Pemecahan masalah", href: "/docs/troubleshooting/", route: true },
     ],
   },
   {
     title: "Keamanan",
     links: [
-      { label: "Verifikasi unduhan", href: "#unduh" },
+      { label: "Verifikasi unduhan", href: "/#unduh" },
       { label: "Kunci publik", href: `${site.releases}/latest/download/ci-key.asc` },
       { label: "Lisensi GPL-3.0", href: `${site.repo}/blob/main/LICENSE` },
     ],
@@ -34,8 +42,8 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/70 bg-muted/30">
-      <div className="w-full px-4 py-10 sm:px-8 lg:px-12">
+    <footer className="border-t border-border bg-secondary/40">
+      <div className="mx-auto w-full max-w-screen-2xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(3,0.7fr)]">
           <div>
             <Logo />
@@ -70,32 +78,44 @@ export function Footer() {
               <h3 className="text-xs font-medium tracking-[0.12em] text-muted-foreground uppercase">
                 {col.title}
               </h3>
-              <ul className="mt-2.5 space-y-1.5">
-                {col.links.map((l) => (
-                  <li key={l.label}>
-                    <a
-                      href={l.href}
-                      target={l.href.startsWith("#") ? undefined : "_blank"}
-                      rel="noreferrer"
-                      className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {l.label}
-                    </a>
-                  </li>
-                ))}
+              <ul className="mt-3 space-y-2">
+                {col.links.map((l) => {
+                  const className =
+                    "text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                  if (l.route) {
+                    return (
+                      <li key={l.label}>
+                        <Link to={l.href} className={className}>
+                          {l.label}
+                        </Link>
+                      </li>
+                    )
+                  }
+                  return (
+                    <li key={l.label}>
+                      <a
+                        href={l.href}
+                        target={l.href.startsWith("#") || l.href.startsWith("/") ? undefined : "_blank"}
+                        rel="noreferrer"
+                        className={className}
+                      >
+                        {l.label}
+                      </a>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           ))}
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 border-t border-border/70 pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[12px] text-muted-foreground">
-            © {YEAR} Fishing OS · Kode profil dilisensikan{" "}
-            {site.license}. Paket di dalam ISO mengikuti lisensi masing-masing dari
-            Arch Linux.
+            &copy; {YEAR} Fishing OS. Kode profil dilisensikan {site.license}. Paket
+            di dalam ISO mengikuti lisensi masing-masing dari Arch Linux.
           </p>
           <p className="font-mono text-[11.5px] text-muted-foreground">
-            Kunci CI · {site.fingerprintFlat.slice(-16)}
+            Kunci CI / {site.fingerprintFlat.slice(-16)}
           </p>
         </div>
         <p className="mt-2 text-[11.5px] text-muted-foreground">

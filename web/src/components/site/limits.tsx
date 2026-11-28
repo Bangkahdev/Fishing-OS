@@ -1,4 +1,5 @@
-import { GitBranchIcon, TerminalIcon } from "lucide-react"
+import { CpuIcon, LifeBuoyIcon } from "lucide-react"
+import { Link } from "react-router-dom"
 import {
   Accordion,
   AccordionContent,
@@ -6,16 +7,23 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CodeBlock } from "@/components/code-block"
 import { Section } from "@/components/section"
-import { limitations, site } from "@/lib/site"
+import { limitations } from "@/lib/site"
+
+const requirements = [
+  "Arsitektur x86_64 (64-bit).",
+  "RAM minimal 2 GB; 4 GB disarankan untuk toolchain dan Docker.",
+  "Firmware BIOS atau UEFI didukung.",
+  "Secure Boot dimatikan sebelum boot.",
+  "USB minimal 2 GB bila memakai media fisik.",
+]
 
 export function Limits() {
   return (
     <Section
       id="batasan"
       title="Apa yang perlu kamu tahu sebelum memakai"
-      description="Fishing OS adalah live/rescue medium, bukan sistem yang dipasang ke disk. Batasan berikut disengaja dan didokumentasikan."
+      description="LiveOS dan installer archinstall adalah dua jalur yang berbeda. Perhatikan penyimpanan sesi live, keamanan, dan status Assistant sebelum melanjutkan."
     >
       <div className="grid items-start gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="rounded-xl border border-border/70 bg-card px-5">
@@ -35,50 +43,45 @@ export function Limits() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm">
-                <TerminalIcon className="size-4 text-primary" />
-                Bangun sendiri
+                <CpuIcon className="size-4 text-primary" />
+                Kebutuhan sistem
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2.5">
-              <p className="text-[13.5px] leading-relaxed text-muted-foreground">
-                Butuh Arch Linux atau container Arch dengan paket{" "}
-                <code className="font-mono text-xs">archiso</code>.
-              </p>
-              <CodeBlock
-                compact
-                code={`sudo pacman -S archiso
-sudo mkarchiso -v -w work -o out profile
-bash tests/check_bootmenu.sh
-bash tests/test_iso.sh out/*.iso`}
-              />
+            <CardContent>
+              <ul className="list-disc space-y-1.5 pl-4 text-[13.5px] leading-relaxed text-muted-foreground marker:text-primary">
+                {requirements.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm">
-                <GitBranchIcon className="size-4 text-primary" />
-                Kontribusi
+                <LifeBuoyIcon className="size-4 text-primary" />
+                Butuh bantuan?
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-[13.5px] leading-relaxed text-muted-foreground">
+            <CardContent className="space-y-3 text-[13.5px] leading-relaxed text-muted-foreground">
               <p>
-                Kirim Pull Request ke <code className="font-mono">main</code>. CI
-                menjalankan shellcheck, yamllint, validasi menu boot, build ISO,
-                dan smoke test di QEMU.
+                Panduan pemecahan masalah untuk boot, jaringan, Docker, dan data
+                yang hilang tersedia di dokumentasi.
               </p>
-              <p>
-                Sebelum mengirim PR, jalankan shellcheck pada skrip yang diubah dan{" "}
-                <code className="font-mono text-xs">bash tests/check_bootmenu.sh</code>.
-              </p>
-              <a
-                href={`${site.repo}/blob/main/docs/SRS.md`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block text-[13px] text-primary hover:underline"
-              >
-                Baca SRS (spesifikasi kebutuhan) →
-              </a>
+              <div className="flex flex-col items-start gap-2">
+                <Link
+                  to="/docs/troubleshooting/"
+                  className="text-[13px] text-primary hover:underline"
+                >
+                  Pemecahan masalah →
+                </Link>
+                <Link
+                  to="/docs/"
+                  className="text-[13px] text-primary hover:underline"
+                >
+                  Jelajahi dokumentasi →
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>
