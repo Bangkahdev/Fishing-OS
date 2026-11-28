@@ -5,13 +5,13 @@
 >
   <url>
     <loc>https://fishingos.bangkah.tech/</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-11-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://fishingos.bangkah.tech/screenshots/01-boot-menu.png</image:loc>
       <image:title>Menu boot Fishing OS</image:title>
-      <image:caption>Entri live, boot dengan speech, memtest86+, dan HDT untuk BIOS dan UEFI.</image:caption>
+      <image:caption>Gambar menu boot dari build sebelumnya; belum menampilkan entri Installer to disk yang ada pada konfigurasi proyek saat ini.</image:caption>
     </image:image>
     <image:image>
       <image:loc>https://fishingos.bangkah.tech/screenshots/02-desktop.png</image:loc>
@@ -43,5 +43,59 @@
       <image:title>Perkakas bawaan Fishing OS</image:title>
       <image:caption>Skrip Fishing OS di /usr/local/bin dan antarmuka jaringan dari shell.</image:caption>
     </image:image>
+  </url>
+  <url>
+    <loc>https://fishingos.bangkah.tech/docs/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://fishingos.bangkah.tech/docs/use-cases/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fishingos.bangkah.tech/docs/download/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fishingos.bangkah.tech/docs/liveos/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fishingos.bangkah.tech/docs/installation/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fishingos.bangkah.tech/docs/tools/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fishingos.bangkah.tech/docs/security/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fishingos.bangkah.tech/docs/troubleshooting/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fishingos.bangkah.tech/docs/assistant/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>

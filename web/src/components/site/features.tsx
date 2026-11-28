@@ -1,4 +1,4 @@
-import {
+﻿import {
   HardDriveIcon,
   MonitorIcon,
   PackageIcon,
@@ -22,19 +22,19 @@ export function Features() {
   return (
     <Section
       id="fitur"
-      title="Dirancang untuk dipakai, bukan dipasang"
-      description="Tanpa langkah instalasi, tanpa partisi. Semua yang dibutuhkan untuk memperbaiki mesin, mencoba konfigurasi, atau bekerja dari komputer pinjaman sudah ada di satu image."
+      title="Pilih LiveOS atau siapkan instalasi Arch"
+      description="LiveOS berjalan dari USB tanpa mengubah disk. Entri Installer to disk membuka archinstall untuk menyiapkan instalasi Arch secara terpisah; installer ini tidak menyalin semua paket dan konfigurasi LiveOS."
     >
-      <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((f) => {
           const Icon = icons[f.icon]
           return (
-            <article key={f.title} className="border-t border-border/70 pt-4">
-              <div className="flex items-center gap-2.5">
+            <article key={f.title} className="rounded-xl border border-border bg-card p-6 hover:border-primary/30 transition-colors">
+              <div className="flex items-center gap-2.5 mb-3">
                 <Icon className="size-4 shrink-0 text-primary" strokeWidth={1.75} />
-                <h3 className="text-[15px] font-medium tracking-[-0.01em]">{f.title}</h3>
+                <h3 className="text-[15px] font-medium tracking-tight">{f.title}</h3>
               </div>
-              <p className="mt-2.5 max-w-[42ch] text-[13.5px] leading-relaxed text-pretty text-muted-foreground">
+              <p className="max-w-[42ch] text-[13.5px] leading-relaxed text-pretty text-muted-foreground">
                 {f.body}
               </p>
             </article>

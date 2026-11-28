@@ -13,8 +13,8 @@ export function Quickstart() {
   return (
     <Section
       id="mulai"
-      title="Dari unduhan ke desktop dalam beberapa menit"
-      description="Mesin virtual adalah cara tercepat untuk mencoba; USB dipakai bila ingin menjalankan langsung di perangkat keras. Secure Boot harus dimatikan di kedua jalur."
+      title="Cara menjalankan LiveOS"
+      description="Coba ISO di mesin virtual atau tulis ke USB untuk boot langsung. Secure Boot harus dimatikan pada kedua jalur."
       bordered
     >
       <div className="grid items-start gap-4 lg:grid-cols-[1.1fr_0.9fr]">
@@ -91,14 +91,22 @@ export function Quickstart() {
                 Untuk Wi-Fi pakai <code className="font-mono">iwctl</code>.
               </p>
             </div>
+            <div className="space-y-1.5 border-t border-border/60 pt-3 text-[13px] leading-relaxed text-muted-foreground">
+              <p className="font-medium text-foreground">Ingin memasang Arch ke disk?</p>
+              <p>
+                Pilih <strong>Installer to disk</strong> pada menu boot untuk
+                membuka archinstall. Atur disk dan profil sendiri; proses ini
+                bukan salinan LiveOS dan dapat menghapus data pada disk tujuan.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
       <ol className="mt-6 grid gap-x-8 gap-y-5 border-t border-border/60 pt-5 sm:grid-cols-3">
         {[
-          ["01", "Tulis atau pasang", "USB lewat dd/Rufus, atau ISO sebagai DVD VM."],
-          ["02", "Boot dan masuk", "Pilih entri live di menu boot."],
+          ["01", "Tulis ISO", "USB lewat dd/Rufus, atau pasang sebagai DVD VM."],
+          ["02", "Pilih LiveOS", "Pilih entri LiveOS di menu boot untuk sesi live."],
           ["03", "Bekerja", "Jalankan fishing-check untuk melihat toolchain."],
         ].map(([n, title, body]) => (
           <li key={n} className="flex gap-3">

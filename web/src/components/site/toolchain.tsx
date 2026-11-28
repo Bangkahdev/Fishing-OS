@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+﻿import { Badge } from "@/components/ui/badge"
 import { Section } from "@/components/section"
 import { toolGroups } from "@/lib/site"
 
@@ -14,7 +14,7 @@ export function Toolchain() {
         {toolGroups.map((g) => (
           <div
             key={g.label}
-            className="rounded-xl border border-border/70 bg-card p-4"
+            className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-colors"
           >
             <h3 className="font-mono text-xs tracking-[0.12em] text-muted-foreground uppercase">
               {g.label}
@@ -30,10 +30,13 @@ export function Toolchain() {
         ))}
       </div>
 
-      <p className="mt-5 max-w-3xl text-[13.5px] leading-relaxed text-muted-foreground">
-        Ansible dibawa sebagai <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">ansible-core</code>{" "}
+      <p className="mt-6 max-w-3xl text-[13.5px] leading-relaxed text-muted-foreground">
+        Ansible dibawa sebagai{" "}
+        <code className="rounded bg-secondary px-1 py-0.5 font-mono text-xs">ansible-core</code>{" "}
         agar ISO tetap kecil. Pasang koleksi yang dibutuhkan dengan{" "}
-        <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">ansible-galaxy collection install</code>.
+        <code className="rounded bg-secondary px-1 py-0.5 font-mono text-xs">
+          ansible-galaxy collection install
+        </code>.
       </p>
     </Section>
   )

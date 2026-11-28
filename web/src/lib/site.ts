@@ -1,19 +1,30 @@
 export const site = {
   name: "Fishing OS",
-  tagline: "Live rescue ISO berbasis Arch Linux untuk programmer",
+  tagline: "Live rescue ISO berbasis Arch Linux untuk pengembang",
   description:
-    "Live/rescue ISO berbasis Arch Linux. Boot dari USB atau mesin virtual dan langsung dapat editor, compiler, Python, Node.js, Go, git, Docker, dan desktop XFCE tanpa instalasi.",
+    "Live/rescue ISO berbasis Arch Linux untuk pengembang. Boot ke LiveOS dari USB atau VM; menu boot juga menyediakan installer archinstall untuk menyiapkan sistem Arch di disk.",
   repo: "https://github.com/Bangkahdev/Fishing-OS",
   repoApi: "https://api.github.com/repos/Bangkahdev/Fishing-OS",
   releases: "https://github.com/Bangkahdev/Fishing-OS/releases",
   issues: "https://github.com/Bangkahdev/Fishing-OS/issues",
+  blog: "https://github.com/Bangkahdev/Fishing-OS/discussions",
+  docs: {
+    readme: "https://github.com/Bangkahdev/Fishing-OS#readme",
+    srs: "https://github.com/Bangkahdev/Fishing-OS/blob/main/docs/SRS-agent-v1.1.md",
+    implementation:
+      "https://github.com/Bangkahdev/Fishing-OS/blob/main/docs/COMPUTER_USE_ASSISTANT_IMPLEMENTATION.md",
+    orchestrator:
+      "https://github.com/Bangkahdev/Fishing-OS/blob/main/docs/ORCHESTRATOR.md",
+    assistantPackage:
+      "https://github.com/Bangkahdev/Fishing-OS/blob/main/packaging/assistant/README.md",
+  },
   author: "Muhammad Dhiyaul Atha",
   authorUrl: "https://github.com/Bangkahdev",
   license: "GPL-3.0",
   fingerprint: "69AA 973A 33A3 930B B1C8 3850 F713 BCD7 D6E8 F591",
   fingerprintFlat: "69AA973A33A3930BB1C83850F713BCD7D6E8F591",
   signer: "Fishing OS CI <bangkah@mdhiyaulatha.me>",
-  fallbackVersion: "2026.10.25",
+  fallbackVersion: "2026.10.4",
   base: "Arch Linux x86_64",
   isoLimit: "2000 MiB",
 }
@@ -45,9 +56,9 @@ export const screenshots: Screenshot[] = [
   {
     src: "/screenshots/01-boot-menu.png",
     title: "Menu boot",
-    alt: "Menu boot Fishing OS dengan entri live, boot dengan speech, memtest86+, dan HDT",
+    alt: "Menu boot Fishing OS dengan entri LiveOS, boot dengan speech, memtest86+, HDT, dan Installer to disk",
     caption:
-      "Entri live, boot dengan speech, memtest86+, dan HDT. BIOS dan UEFI didukung.",
+      "Menu boot menyediakan LiveOS (sesi sementara) dan entri Installer to disk yang membuka archinstall untuk pemasangan Arch ke disk.",
     width: 624,
     height: 476,
     variants: [480, 624],
@@ -125,8 +136,8 @@ export function webpSrcSet(shot: Screenshot) {
 export const features = [
   {
     icon: "terminal",
-    title: "Langsung pakai, tanpa instalasi",
-    body: "Boot dari USB atau mesin virtual, lalu bekerja. Tidak ada langkah pasang, tidak ada partisi yang disentuh.",
+    title: "LiveOS atau installer Arch",
+    body: "LiveOS berjalan dari USB/VM tanpa menulis ke disk. Entri Installer to disk membuka archinstall untuk mengatur pemasangan Arch secara terpisah; prosesnya tidak menyalin seluruh isi LiveOS.",
   },
   {
     icon: "monitor",
@@ -135,7 +146,7 @@ export const features = [
   },
   {
     icon: "package",
-    title: "Perkakas programmer lengkap",
+    title: "Toolchain untuk pengembangan",
     body: "git, Python, Node.js, Go, compiler C/C++, Docker, kubectl, Helm, Terraform, dan Ansible sudah terpasang.",
   },
   {
@@ -152,6 +163,29 @@ export const features = [
     icon: "harddrive",
     title: "BIOS dan UEFI",
     body: "Menu boot tersedia untuk firmware lama maupun modern. Secure Boot perlu dimatikan karena bootloader belum ditandatangani.",
+  },
+] as const
+
+export const assistantFeatures = [
+  {
+    title: "AT-SPI2 grounding",
+    body: "Penelusuran elemen UI dan aksi tombol yang terverifikasi melalui pyatspi, tanpa dependensi output model mentah.",
+  },
+  {
+    title: "Orchestrator + tool registry",
+    body: "Instruksi bahasa alami diubah menjadi rencana tool call, divalidasi schema, dicek policy, lalu dieksekusi dan diverifikasi hasilnya.",
+  },
+  {
+    title: "Model manager & tanda tangan",
+    body: "Manifest model dengan verifikasi checksum SHA-256 dan signature GPG; load, unload, dan status OOM tercatat.",
+  },
+  {
+    title: "Privilege Broker",
+    body: "IPC Unix socket terautentikasi (SO_PEERCRED) yang memediasi operasi elevated via sudo, lengkap audit tanpa menyimpan kredensial.",
+  },
+  {
+    title: "Artefak paket OS",
+    body: "Launcher, entri desktop, systemd user service, PKGBUILD, dan install.sh untuk pemasangan ke Fishing OS yang sudah terpasang ke disk.",
   },
 ] as const
 
@@ -207,12 +241,16 @@ export const commands = [
 
 export const limitations = [
   {
-    q: "Apakah data saya tersimpan?",
-    a: "Tidak. Fishing OS adalah live medium: semua perubahan hilang setelah reboot. Installer ke disk belum ada dan direncanakan pada fase berikutnya.",
+    q: "Apa bedanya LiveOS dan Installer to disk?",
+    a: "LiveOS berjalan dari USB dan perubahan sesi hilang saat reboot. Installer to disk membuka archinstall untuk menyiapkan instalasi Arch Linux secara terpisah; ini bukan salinan otomatis seluruh paket dan setelan LiveOS. Kamu memilih disk dan konfigurasi sendiri, dan perubahan partisi dapat menghapus data.",
+  },
+  {
+    q: "Apakah Computer-Use Assistant sudah siap dipakai?",
+    a: "Belum untuk penggunaan umum. Fondasi control plane, orchestrator, tool registry, AT-SPI2 grounding, model manager, dan Privilege Broker tersedia di repository. Assistant tidak disertakan di Live ISO dan belum ditawarkan oleh installer; model LLM/VLM serta backend inferensi siap pakai belum disediakan.",
   },
   {
     q: "Bagaimana dengan keamanan kredensial?",
-    a: "root dan liveuser tanpa password adalah perilaku bawaan live medium, dan sshd aktif sejak boot. Jangan pakai di jaringan yang tidak tepercaya tanpa mengganti kredensial. User dev yang dibuat fishing-setup memakai password yang kamu tentukan.",
+    a: "LiveOS masuk otomatis sebagai liveuser; akun root dan liveuser tidak memakai password. Layanan sshd aktif dan mengizinkan autentikasi password serta login root. Jangan hubungkan LiveOS ke jaringan yang tidak tepercaya sebelum menonaktifkan SSH atau mengamankan autentikasi dan firewall. fishing-setup meminta password untuk user dev yang dibuatnya.",
   },
   {
     q: "Kenapa Secure Boot harus dimatikan?",
